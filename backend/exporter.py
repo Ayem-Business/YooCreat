@@ -63,7 +63,7 @@ class EbookExporter:
     
     def export_to_pdf(self) -> BytesIO:
         """
-        Export ebook to PDF format with professional layout
+        Export ebook to PDF format with professional layout, page numbers, and enhanced cover
         
         Returns:
             BytesIO: PDF file in memory
@@ -75,7 +75,7 @@ class EbookExporter:
             rightMargin=72,
             leftMargin=72,
             topMargin=72,
-            bottomMargin=18,
+            bottomMargin=36,  # Increased for page numbers
         )
         
         # Styles
@@ -85,11 +85,21 @@ class EbookExporter:
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=24,
+            fontSize=28,
             textColor=colors.HexColor('#3B82F6'),
-            spaceAfter=30,
+            spaceAfter=20,
             alignment=TA_CENTER,
             fontName='Helvetica-Bold'
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'SubtitleStyle',
+            parent=styles['Normal'],
+            fontSize=16,
+            textColor=colors.HexColor('#F97316'),
+            spaceAfter=30,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Oblique'
         )
         
         author_style = ParagraphStyle(
@@ -125,25 +135,57 @@ class EbookExporter:
         # Build document
         story = []
         
-        # Cover page
-        story.append(Spacer(1, 2*inch))
+        # Enhanced Cover Page with design
+        story.append(Spacer(1, 1.5*inch))
+        
+        # Add design elements if available
+        if self.cover.get('design'):
+            # Add a colored banner effect using a table
+            cover_colors = self.cover['design'].get('colors', ['#3B82F6', '#8B5CF6', '#F97316'])
+            
+            # Try to parse colors
+            try:
+                color1 = colors.HexColor(cover_colors[0]) if len(cover_colors) > 0 else colors.HexColor('#3B82F6')
+                color2 = colors.HexColor(cover_colors[1]) if len(cover_colors) > 1 else colors.HexColor('#8B5CF6')
+            except:
+                color1 = colors.HexColor('#3B82F6')
+                color2 = colors.HexColor('#8B5CF6')
+            
+            # Color bar at top
+            color_bar = Table([['']], colWidths=[6*inch])
+            color_bar.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), color1),
+                ('LINEBELOW', (0, 0), (-1, -1), 4, color2),
+            ]))
+            story.append(color_bar)
+            story.append(Spacer(1, 0.5*inch))
+        
         story.append(Paragraph(self.title, title_style))
-        story.append(Spacer(1, 0.5*inch))
+        story.append(Spacer(1, 0.3*inch))
         story.append(Paragraph(f"par {self.author}", author_style))
         
         # Add tagline if exists
         if self.cover.get('tagline'):
-            tagline_style = ParagraphStyle(
-                'Tagline',
+            story.append(Spacer(1, 0.8*inch))
+            story.append(Paragraph(self.cover['tagline'], subtitle_style))
+        
+        # Add back cover text preview if exists
+        if self.cover.get('back_cover_text'):
+            back_text_style = ParagraphStyle(
+                'BackText',
                 parent=styles['Normal'],
-                fontSize=12,
-                textColor=colors.HexColor('#F97316'),
-                spaceAfter=12,
+                fontSize=10,
+                textColor=colors.HexColor('#4B5563'),
                 alignment=TA_CENTER,
+                spaceAfter=12,
                 fontName='Helvetica-Oblique'
             )
             story.append(Spacer(1, 1*inch))
-            story.append(Paragraph(self.cover['tagline'], tagline_style))
+            # Truncate if too long
+            back_text = self.cover['back_cover_text']
+            if len(back_text) > 200:
+                back_text = back_text[:200] + "..."
+            story.append(Paragraph(back_text, back_text_style))
         
         story.append(PageBreak())
         
