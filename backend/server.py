@@ -416,21 +416,37 @@ CONTEXTE DU LIVRE :
 - Public cible : {', '.join(ebook['target_audience'])}
 - Objectif : {ebook['description']}
 
-MISSION : Rédige une INTRODUCTION percutante (800-1000 mots) qui :
-1. **ACCROCHE** le lecteur dès les premières lignes
-2. **PRÉSENTE** le problème ou sujet principal
-3. **EXPLIQUE** pourquoi ce livre est important pour le lecteur
-4. **ANNONCE** les bénéfices et ce qu'il va apprendre
-5. **CRÉE** l'anticipation pour la suite
+MISSION : Rédige une INTRODUCTION percutante (900-1200 mots) structurée ainsi :
 
-Style : {ebook['tone']}, adapté à {', '.join(ebook['target_audience'])}.
+1. **OUVERTURE CAPTIVANTE** (2-3 paragraphes)
+   - Une anecdote personnelle, histoire marquante ou statistique surprenante
+   - Questions qui interpellent directement le lecteur
+   - Établis une connexion émotionnelle immédiate
 
-Utilise :
-- Une anecdote personnelle ou une statistique marquante pour démarrer
-- Des questions qui interpellent le lecteur
-- Des promesses concrètes
+2. **LE POURQUOI** (2-3 paragraphes)
+   - Présente le problème ou besoin auquel répond ce livre
+   - Explique pourquoi c'est important MAINTENANT
+   - Crée l'urgence et la pertinence
 
-Réponds UNIQUEMENT avec le texte de l'introduction (sans titre)."""
+3. **LA PROMESSE** (2-3 paragraphes)
+   - Énonce clairement les bénéfices concrets pour le lecteur
+   - Liste 3-4 choses spécifiques qu'il va apprendre ou accomplir
+   - Témoigne de la transformation possible
+
+4. **LA FEUILLE DE ROUTE** (1-2 paragraphes)
+   - Donne un aperçu du parcours à venir (sans détailler chaque chapitre)
+   - Crée l'anticipation et l'excitation pour la lecture
+   - Termine sur une note motivante qui donne envie de tourner la page
+
+EXIGENCES STRICTES :
+- Style : {ebook['tone']}, adapté à {', '.join(ebook['target_audience'])}
+- ⚠️ INTERDIT : N'utilise JAMAIS les symboles #, ##, ### ou autres balises Markdown
+- ⚠️ INTERDIT : Ne répète JAMAIS le mot "Introduction" dans le texte
+- Structure : Utilise UNIQUEMENT le format "🔹 Titre de section" si nécessaire pour des sous-parties
+- Ton : Engageant, personnel, et orienté vers l'action
+- Langage : 100% en français
+
+Réponds UNIQUEMENT avec le texte de l'introduction (le titre "Introduction" sera ajouté automatiquement)."""
 
             elif chapter_type == 'conclusion':
                 prompt = f"""Tu es un auteur professionnel spécialisé en conclusions mémorables.
