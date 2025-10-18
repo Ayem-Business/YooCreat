@@ -163,7 +163,112 @@ Utiliser `auto_frontend_testing_agent` pour tester:
 
 ---
 
-## Status: ✅ Implémentation Complète et Testée
+## Status: ✅ Implémentation Complète - Tests Backend Validés
+
+---
+
+## Corrections Supplémentaires (Suite Feedback Utilisateur)
+
+### Date: 2025-01-XX - Session 2
+
+**Problèmes Identifiés:**
+1. ❌ Page de couverture générée pas incluse dans exports (design avec couleurs/tagline manquant)
+2. ❌ Numéros de page manquants dans la TOC
+3. ❌ Pages du PDF non numérotées
+
+**Solutions Implémentées:**
+
+### 1. ✅ Page de Couverture Enrichie (exporter.py)
+
+**Modifications dans export_to_pdf():**
+- Ajout d'une barre de couleur en haut utilisant les couleurs du design généré
+- Taille de titre augmentée (28pt vs 24pt)
+- Affichage du tagline avec style italique orange
+- Aperçu du texte de dos de couverture (200 premiers caractères)
+- Utilisation des couleurs HEX du design (`cover.design.colors`)
+- Positionnement amélioré avec espacements
+
+**Structure de la couverture:**
+```
+[Barre de couleur décorative]
+[Espace]
+TITRE (28pt, bleu, gras)
+par AUTEUR (14pt, gris)
+"Tagline" (16pt, orange, italique)
+[Aperçu dos de couverture] (10pt, gris)
+```
+
+### 2. ✅ Numérotation des Pages dans le PDF (exporter.py)
+
+**Nouvelle fonction ajoutée:**
+```python
+def add_page_number(canvas, doc):
+    """Add page numbers to the PDF"""
+    page_num = canvas.getPageNumber()
+    text = f"Page {page_num}"
+    canvas.drawCentredString(A4[0]/2.0, 0.5*inch, text)
+```
+
+**Intégration:**
+```python
+doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
+```
+
+**Résultat:**
+- Chaque page affiche "Page X" centré en bas
+- Police Helvetica 9pt, couleur grise
+- Positionnement à 0.5 inch du bas
+- Marge inférieure augmentée à 36pt (vs 18pt) pour accommoder
+
+### 3. ✅ Numéros de Page dans la TOC (exporter.py)
+
+**Algorithme d'estimation des pages:**
+```python
+current_page = 1  # Cover
+if self.legal_pages:
+    current_page += 2  # Copyright + Legal
+current_page += 1  # TOC
+
+for chapter in chapters:
+    # Display in TOC
+    toc_entry = "Chapitre X : Titre ........... page_number"
+    
+    # Estimate pages (2000 chars = 1 page)
+    estimated_pages = max(2, (content_length // 2000) + 1)
+    current_page += estimated_pages
+```
+
+**Affichage dans la TOC:**
+- Utilisation de Table pour alignement gauche-droite
+- Format: `Titre ........... 5`
+- Sous-titres affichés en dessous avec puces
+- Espacement cohérent
+
+### Fichiers Modifiés (Session 2)
+
+1. `/app/backend/exporter.py`
+   - Ajout fonction `add_page_number()`
+   - Import de `TA_RIGHT` pour alignement
+   - Refonte de `export_to_pdf()` avec couverture enrichie
+   - Calcul dynamique des numéros de page pour TOC
+   - Intégration de la numérotation dans doc.build()
+
+## Tests à Effectuer
+
+### Backend
+- ✅ Tests précédents validés
+- ⏳ Test export PDF avec numérotation
+- ⏳ Test couverture visuelle dans PDF
+- ⏳ Test numéros de page dans TOC
+
+### Frontend
+- ⏳ Tests automatisés via `auto_frontend_testing_agent`
+- ⏳ Validation visuelle de tous les exports
+- ⏳ Vérification workflow complet
+
+---
+
+## Status: ✅ Corrections Appliquées - En Attente Tests E2E
 
 ---
 
