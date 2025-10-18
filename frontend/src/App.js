@@ -1392,6 +1392,173 @@ const EbookViewer = () => {
           </div>
         )}
 
+        {/* Affichage du thème visuel généré */}
+        {ebook.visual_theme && (
+          <div className="card mb-6" data-testid="theme-display">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">🎨 Thème Visuel</h2>
+            
+            <div className="space-y-6">
+              {/* Overall Mood */}
+              {ebook.visual_theme.overall_mood && (
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                  <p className="text-gray-700 italic text-center">{ebook.visual_theme.overall_mood}</p>
+                </div>
+              )}
+
+              {/* Palette de Couleurs */}
+              {ebook.visual_theme.palette && (
+                <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
+                  <h3 className="font-bold text-gray-700 mb-3 flex items-center">
+                    <span className="mr-2">🎨</span>
+                    Palette de Couleurs
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4 mb-3">
+                    <div className="text-center">
+                      <div 
+                        className="w-full h-20 rounded-lg shadow-md mb-2" 
+                        style={{ backgroundColor: ebook.visual_theme.palette.primary }}
+                      ></div>
+                      <p className="text-xs font-semibold text-gray-600">Primaire</p>
+                      <p className="text-xs text-gray-500">{ebook.visual_theme.palette.primary}</p>
+                    </div>
+                    <div className="text-center">
+                      <div 
+                        className="w-full h-20 rounded-lg shadow-md mb-2" 
+                        style={{ backgroundColor: ebook.visual_theme.palette.secondary }}
+                      ></div>
+                      <p className="text-xs font-semibold text-gray-600">Secondaire</p>
+                      <p className="text-xs text-gray-500">{ebook.visual_theme.palette.secondary}</p>
+                    </div>
+                    <div className="text-center">
+                      <div 
+                        className="w-full h-20 rounded-lg shadow-md mb-2" 
+                        style={{ backgroundColor: ebook.visual_theme.palette.background }}
+                      ></div>
+                      <p className="text-xs font-semibold text-gray-600">Arrière-plan</p>
+                      <p className="text-xs text-gray-500">{ebook.visual_theme.palette.background}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">{ebook.visual_theme.palette.justification}</p>
+                </div>
+              )}
+
+              {/* Polices */}
+              {ebook.visual_theme.fonts && (
+                <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
+                  <h3 className="font-bold text-gray-700 mb-3 flex items-center">
+                    <span className="mr-2">🔤</span>
+                    Polices de Caractères
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-4 mb-3">
+                    <div className="p-3 bg-gray-50 rounded">
+                      <p className="text-xs text-gray-500 mb-1">Corps du Texte</p>
+                      <p className="text-lg font-semibold" style={{ fontFamily: ebook.visual_theme.fonts.body }}>
+                        {ebook.visual_theme.fonts.body}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded">
+                      <p className="text-xs text-gray-500 mb-1">Titres</p>
+                      <p className="text-lg font-bold" style={{ fontFamily: ebook.visual_theme.fonts.titles }}>
+                        {ebook.visual_theme.fonts.titles}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">{ebook.visual_theme.fonts.justification}</p>
+                </div>
+              )}
+
+              {/* Style de Citations */}
+              {ebook.visual_theme.quote_style && (
+                <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
+                  <h3 className="font-bold text-gray-700 mb-3 flex items-center">
+                    <span className="mr-2">💬</span>
+                    Style des Citations/Encadrés
+                  </h3>
+                  <div className="flex items-center space-x-3 mb-2">
+                    <span className="text-3xl">{ebook.visual_theme.quote_style.icon}</span>
+                    <div>
+                      <p className="font-semibold text-gray-700 capitalize">{ebook.visual_theme.quote_style.type}</p>
+                      <p className="text-sm text-gray-600">{ebook.visual_theme.quote_style.description}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Séparateur de Chapitre */}
+              {ebook.visual_theme.chapter_separator && (
+                <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
+                  <h3 className="font-bold text-gray-700 mb-3 flex items-center">
+                    <span className="mr-2">✨</span>
+                    Séparateur de Chapitre
+                  </h3>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-3xl">{ebook.visual_theme.chapter_separator.symbol}</span>
+                    <div>
+                      <p className="font-semibold text-gray-700 capitalize">{ebook.visual_theme.chapter_separator.type}</p>
+                      <p className="text-sm text-gray-600">{ebook.visual_theme.chapter_separator.description}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Affichage des illustrations générées */}
+        {ebook.illustrations && ebook.illustrations.length > 0 && (
+          <div className="card mb-6" data-testid="illustrations-display">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">🖼️ Illustrations Suggérées</h2>
+            
+            <div className="space-y-6">
+              {ebook.illustrations.map((chapterIllust, idx) => (
+                <div key={idx} className="border-2 border-gray-200 rounded-lg p-4">
+                  <h3 className="font-bold text-gray-700 mb-3">
+                    Chapitre {chapterIllust.chapter_number}
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {chapterIllust.queries && chapterIllust.queries.map((query, qIdx) => (
+                      <div key={qIdx} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex flex-col md:flex-row gap-4">
+                          {/* Image Preview */}
+                          {query.image_url && (
+                            <div className="md:w-1/3">
+                              <img 
+                                src={query.image_url} 
+                                alt={query.alt_text}
+                                className="w-full h-40 object-cover rounded-lg shadow-md"
+                                onError={(e) => {
+                                  e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+                                }}
+                              />
+                            </div>
+                          )}
+                          
+                          {/* Details */}
+                          <div className="md:w-2/3">
+                            <p className="text-sm text-gray-500 mb-1">
+                              <strong>Recherche :</strong> {query.search_query}
+                            </p>
+                            <p className="text-sm text-gray-600 mb-2">
+                              <strong>Description Alt :</strong> {query.alt_text}
+                            </p>
+                            <p className="text-xs text-gray-500 italic">
+                              <strong>Placement :</strong> {query.placement}
+                            </p>
+                            {query.image_credit && (
+                              <p className="text-xs text-gray-400 mt-2">{query.image_credit}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Contenu des chapitres */}
         {ebook.chapters && ebook.chapters.length > 0 ? (
           <div className="space-y-6">
