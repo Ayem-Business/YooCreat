@@ -285,8 +285,21 @@ async def get_me(current_user = Depends(get_current_user)):
     return {
         "id": current_user["_id"],
         "username": current_user["username"],
-        "email": current_user["email"]
+        "email": current_user["email"],
+        "picture": current_user.get("picture")
     }
+
+@app.post("/api/auth/logout")
+async def logout(response: Response, session_token: Optional[str] = Cookie(None)):
+    """Logout user by deleting session and clearing cookie"""
+    if session_token:
+        # Delete session from database
+        user_sessions_collection.delete_one({"session_token": session_token})
+    
+    # Clear cookie
+    response.delete_cookie(key="session_token", path="/")
+    
+    return {"success": True, "message": "Logged out successfully"}
 
 @app.post("/api/ebooks/generate-toc")
 async def generate_toc(data: GenerateTOC, current_user = Depends(get_current_user)):
