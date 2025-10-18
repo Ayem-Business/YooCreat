@@ -952,7 +952,7 @@ const EbookViewer = () => {
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border-2 border-gray-200 z-10">
                     <div className="p-2">
                       <button
-                        onClick={() => handleExport('pdf')}
+                        onClick={(e) => { e.stopPropagation(); handleExport('pdf'); }}
                         disabled={exporting}
                         className="w-full text-left px-4 py-3 rounded-md hover:bg-blue-50 transition-all flex items-center space-x-3"
                         data-testid="export-pdf"
@@ -965,7 +965,7 @@ const EbookViewer = () => {
                       </button>
 
                       <button
-                        onClick={() => handleExport('epub')}
+                        onClick={(e) => { e.stopPropagation(); handleExport('epub'); }}
                         disabled={exporting}
                         className="w-full text-left px-4 py-3 rounded-md hover:bg-purple-50 transition-all flex items-center space-x-3"
                         data-testid="export-epub"
@@ -978,7 +978,7 @@ const EbookViewer = () => {
                       </button>
 
                       <button
-                        onClick={() => handleExport('html')}
+                        onClick={(e) => { e.stopPropagation(); handleExport('html'); }}
                         disabled={exporting}
                         className="w-full text-left px-4 py-3 rounded-md hover:bg-orange-50 transition-all flex items-center space-x-3"
                         data-testid="export-html"
@@ -991,7 +991,7 @@ const EbookViewer = () => {
                       </button>
 
                       <button
-                        onClick={() => handleExport('docx')}
+                        onClick={(e) => { e.stopPropagation(); handleExport('docx'); }}
                         disabled={exporting}
                         className="w-full text-left px-4 py-3 rounded-md hover:bg-blue-50 transition-all flex items-center space-x-3"
                         data-testid="export-docx"
@@ -1004,7 +1004,7 @@ const EbookViewer = () => {
                       </button>
 
                       <button
-                        onClick={() => handleExport('mobi')}
+                        onClick={(e) => { e.stopPropagation(); handleExport('mobi'); }}
                         disabled={exporting}
                         className="w-full text-left px-4 py-3 rounded-md hover:bg-green-50 transition-all flex items-center space-x-3"
                         data-testid="export-mobi"
