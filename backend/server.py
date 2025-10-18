@@ -191,33 +191,92 @@ async def login(user_data: UserLogin):
     }
 
 @app.post("/api/auth/google")
-async def google_auth(auth_data: GoogleAuth):
-    # Check if user exists with this email
-    user = users_collection.find_one({"email": auth_data.email})
-    
-    if not user:
-        # Create new user
-        user_id = f"user_{datetime.utcnow().timestamp()}".replace(".", "_")
-        user = {
-            "_id": user_id,
-            "username": auth_data.name,
-            "email": auth_data.email,
-            "password_hash": None,
-            "google_id": auth_data.google_token,
-            "created_at": datetime.utcnow().isoformat()
+async def google_auth(auth_data: GoogleAuth, response: Response):
+    """
+    Process Google OAuth authentication via Emergent
+    1. Frontend sends session_id from URL fragment
+    2. Backend exchanges session_id for user data and session_token
+    3. Store session and return user data with cookie
+    """
+    try:
+        # Exchange session_id for user data
+        async with httpx.AsyncClient() as client:
+            api_response = await client.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": auth_data.session_id},
+                timeout=10.0
+            )
+            
+            if api_response.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid session ID")
+            
+            session_data = api_response.json()
+        
+        # Check if user exists
+        user = users_collection.find_one({"email": session_data["email"]})
+        
+        if not user:
+            # Create new user
+            user_id = f"user_{datetime.now(timezone.utc).timestamp()}".replace(".", "_")
+            user = {
+                "_id": user_id,
+                "username": session_data["name"],
+                "email": session_data["email"],
+                "password_hash": None,
+                "google_id": session_data["id"],
+                "picture": session_data.get("picture"),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            users_collection.insert_one(user)
+        else:
+            user_id = user["_id"]
+            # Update google_id and picture if not set
+            if not user.get("google_id"):
+                users_collection.update_one(
+                    {"_id": user_id},
+                    {"$set": {
+                        "google_id": session_data["id"],
+                        "picture": session_data.get("picture")
+                    }}
+                )
+        
+        # Store session in database (7 days expiry)
+        session_token = session_data["session_token"]
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        
+        user_sessions_collection.insert_one({
+            "user_id": user_id,
+            "session_token": session_token,
+            "expires_at": expires_at,
+            "created_at": datetime.now(timezone.utc)
+        })
+        
+        # Set httpOnly cookie
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite="lax",
+            path="/",
+            max_age=7 * 24 * 60 * 60  # 7 days
+        )
+        
+        return {
+            "success": True,
+            "session_token": session_token,
+            "user": {
+                "id": user_id,
+                "username": user.get("username"),
+                "email": session_data["email"],
+                "picture": session_data.get("picture")
+            }
         }
-        users_collection.insert_one(user)
-    else:
-        user_id = user["_id"]
-    
-    token = create_access_token({"sub": user_id, "email": auth_data.email})
-    
-    return {
-        "token": token,
-        "user": {
-            "id": user_id,
-            "username": user.get("username", auth_data.name),
-            "email": auth_data.email
+        
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Error connecting to auth service: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Authentication error: {str(e)}")
         }
     }
 
