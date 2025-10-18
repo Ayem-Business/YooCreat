@@ -859,7 +859,7 @@ const EbookViewer = () => {
     try {
       const response = await axios.post(
         `${API_URL}/api/ebooks/generate-cover`,
-        id,
+        JSON.stringify(id),
         {
           headers: { 'Content-Type': 'application/json' },
           withCredentials: true
