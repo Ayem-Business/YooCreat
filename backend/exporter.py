@@ -219,7 +219,7 @@ class EbookExporter:
                         story.append(Spacer(1, 6))
                 story.append(PageBreak())
         
-        # Table of contents (enhanced with subtitles)
+        # Table of contents (enhanced with page numbers estimation)
         story.append(Paragraph("Table des Matières", chapter_title_style))
         story.append(Spacer(1, 0.3*inch))
         
@@ -241,8 +241,20 @@ class EbookExporter:
             fontName='Helvetica'
         )
         
+        # Calculate page numbers
+        # Cover = 1 page
+        # Legal pages = 1-2 pages (if present)
+        # TOC = 1 page
+        # Then chapters
+        
+        current_page = 1  # Cover
+        if self.legal_pages:
+            current_page += 2  # Copyright + Legal mentions
+        current_page += 1  # TOC itself
+        
+        # Create TOC with calculated page numbers
+        toc_data = []
         for idx, chapter in enumerate(self.chapters):
-            # Main chapter entry
             chapter_type = chapter.get('type', 'chapter')
             if chapter_type == 'introduction':
                 toc_entry = f"Introduction"
@@ -251,7 +263,18 @@ class EbookExporter:
             else:
                 toc_entry = f"Chapitre {chapter['number']} : {chapter['title']}"
             
-            story.append(Paragraph(toc_entry, toc_style))
+            # Create entry with page number using Table for alignment
+            toc_table_data = [[
+                Paragraph(toc_entry, toc_style),
+                Paragraph(f"........... {current_page}", toc_style)
+            ]]
+            toc_table = Table(toc_table_data, colWidths=[4.5*inch, 1.5*inch])
+            toc_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            story.append(toc_table)
             
             # Add subtitles if available from TOC data
             if self.toc and idx < len(self.toc):
@@ -260,6 +283,12 @@ class EbookExporter:
                     story.append(Paragraph(f"• {subtitle}", toc_subtitle_style))
             
             story.append(Spacer(1, 6))
+            
+            # Estimate pages for this chapter (average ~2-3 pages per chapter)
+            content_length = len(chapter.get('content', ''))
+            # Rough estimate: 2000 characters per page
+            estimated_pages = max(2, (content_length // 2000) + 1)
+            current_page += estimated_pages
         
         story.append(PageBreak())
         
