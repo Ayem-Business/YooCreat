@@ -522,10 +522,15 @@ Réponds UNIQUEMENT avec le contenu du chapitre (sans répéter le titre princip
                 "number": chapter["number"],
                 "title": chapter["title"],
                 "description": chapter["description"],
+                "type": chapter_type,
                 "content": content.strip(),
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
             chapters.append(chapter_data)
+            
+            # Créer un résumé du chapitre pour le chapitre suivant
+            if chapter_type == 'chapter':
+                previous_chapter_summary = f"Chapitre précédent '{chapter['title']}' : {chapter['description'][:100]}..."
         
         # Update ebook with chapters
         ebooks_collection.update_one(
