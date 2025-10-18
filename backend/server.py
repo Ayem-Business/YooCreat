@@ -870,6 +870,251 @@ Réponds UNIQUEMENT avec le JSON."""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating legal pages: {str(e)}")
 
+@app.post("/api/ebooks/generate-visual-theme")
+async def generate_visual_theme(request: GenerateVisualThemeRequest, current_user = Depends(get_current_user)):
+    """Generate visual theme (colors, fonts, styles) for the ebook using AI"""
+    try:
+        ebook_id = request.ebook_id
+        # Get ebook
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Generate theme using AI
+        prompt = f"""Tu es un designer graphique expert spécialisé dans la conception de livres numériques et imprimés.
+
+INFORMATIONS DU LIVRE :
+- Titre : {ebook['title']}
+- Auteur : {ebook['author']}
+- Ton : {ebook['tone']}
+- Public cible : {', '.join(ebook['target_audience'])}
+- Description : {ebook['description']}
+
+MISSION : Crée un thème visuel professionnel et cohérent pour ce livre qui inclut :
+
+1. **PALETTE DE COULEURS**
+   - Couleur Primaire : Pour les titres H1, éléments principaux (code HEX)
+   - Couleur Secondaire : Pour citations, encadrés, accents (code HEX)
+   - Couleur d'Arrière-plan : Pour les encadrés et sections spéciales (code HEX)
+   - Justification : Explique pourquoi ces couleurs sont adaptées au sujet
+
+2. **POLICES DE CARACTÈRES**
+   - Police pour le Corps : Choisir parmi [Helvetica, Georgia, Arial, Times New Roman, Palatino]
+   - Police pour les Titres : Choisir parmi [Helvetica-Bold, Georgia-Bold, Arial-Bold, Times-Bold]
+   - Justification : Pourquoi ces polices améliorent la lisibilité
+
+3. **STYLE D'ENCADRÉS/CITATIONS**
+   - Type : "classique" (italique + bordure latérale) OU "graphique" (encadré coloré avec icône)
+   - Description : Comment appliquer ce style
+   - Icône suggérée : (si graphique) emoji ou symbole approprié
+
+4. **SÉPARATEUR DE CHAPITRE**
+   - Type : "minimaliste" (simple saut) OU "décoratif" (motif graphique)
+   - Description : Si décoratif, décrire le motif (ex: ligne ornementale, symbole)
+   - Symbole : (si décoratif) caractère Unicode ou emoji approprié
+
+Format de réponse (JSON strict) :
+{{
+  "palette": {{
+    "primary": "#HEXCODE",
+    "secondary": "#HEXCODE",
+    "background": "#HEXCODE",
+    "justification": "Explication des choix de couleurs..."
+  }},
+  "fonts": {{
+    "body": "Nom de la police",
+    "titles": "Nom de la police-Bold",
+    "justification": "Explication des choix de polices..."
+  }},
+  "quote_style": {{
+    "type": "classique ou graphique",
+    "description": "Description de l'application...",
+    "icon": "emoji ou symbole"
+  }},
+  "chapter_separator": {{
+    "type": "minimaliste ou décoratif",
+    "description": "Description du séparateur...",
+    "symbol": "caractère unicode"
+  }},
+  "overall_mood": "Description générale de l'ambiance visuelle (1-2 phrases)"
+}}
+
+EXIGENCES :
+- Couleurs : Codes HEX valides uniquement
+- Polices : Choisir uniquement parmi les listes proposées (compatibilité PDF/EPUB)
+- Style : Cohérent avec le ton {ebook['tone']} et le public {', '.join(ebook['target_audience'])}
+- Professionnel : Le thème doit être élégant et faciliter la lecture
+- Langage : Réponse en français
+
+Réponds UNIQUEMENT avec le JSON."""
+
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"theme_{ebook_id}_{datetime.now(timezone.utc).timestamp()}",
+            system_message="Tu es un designer graphique expert spécialisé dans la conception de livres."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        user_message = UserMessage(text=prompt)
+        response = await chat.send_message(user_message)
+        
+        # Clean and parse response
+        import json
+        clean_response = response.strip()
+        if clean_response.startswith("```json"):
+            clean_response = clean_response[7:]
+        if clean_response.startswith("```"):
+            clean_response = clean_response[3:]
+        if clean_response.endswith("```"):
+            clean_response = clean_response[:-3]
+        clean_response = clean_response.strip()
+        
+        theme_data = json.loads(clean_response)
+        
+        # Save theme to ebook
+        ebooks_collection.update_one(
+            {"_id": ebook_id},
+            {"$set": {"visual_theme": theme_data}}
+        )
+        
+        return {
+            "success": True,
+            "visual_theme": theme_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating visual theme: {str(e)}")
+
+@app.post("/api/ebooks/generate-illustrations")
+async def generate_illustrations(request: GenerateIllustrationsRequest, current_user = Depends(get_current_user)):
+    """Generate illustration suggestions for each chapter using AI and Unsplash API"""
+    try:
+        ebook_id = request.ebook_id
+        # Get ebook
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        chapters = ebook.get('chapters', [])
+        if not chapters:
+            raise HTTPException(status_code=400, detail="Generate content first before illustrations")
+        
+        # Generate illustration queries for each chapter using AI
+        illustrations_data = []
+        
+        for chapter in chapters:
+            chapter_num = chapter.get('number', 0)
+            chapter_title = chapter.get('title', '')
+            chapter_desc = chapter.get('description', '')
+            chapter_type = chapter.get('type', 'chapter')
+            
+            # Skip for introduction/conclusion or limit to regular chapters
+            if chapter_type not in ['chapter']:
+                continue
+            
+            # AI generates search queries for Unsplash
+            prompt = f"""Tu es un expert en recherche d'images et illustration de livres.
+
+CHAPITRE À ILLUSTRER :
+- Numéro : {chapter_num}
+- Titre : {chapter_title}
+- Description : {chapter_desc}
+- Livre : {ebook['title']} ({ebook['tone']})
+
+MISSION : Génère 1-3 requêtes de recherche d'images pour ce chapitre qui soient :
+1. **Pertinentes** au contenu du chapitre
+2. **Génériques** pour trouver des photos libres de droits (évite les termes trop spécifiques)
+3. **Visuellement attrayantes** (nature, objets, concepts abstraits, personnes en action)
+4. En **anglais** (pour Unsplash API)
+
+Pour chaque requête, génère aussi une description ALT en français pour l'accessibilité.
+
+Format de réponse (JSON strict) :
+{{
+  "chapter_number": {chapter_num},
+  "queries": [
+    {{
+      "search_query": "mot-clé en anglais (ex: meditation, healthy food, workspace)",
+      "alt_text": "Description accessible en français (ex: Une personne en méditation dans un cadre paisible)",
+      "placement": "Après quel H2 ou section (ex: Après 'Les bases de la pratique')"
+    }}
+  ]
+}}
+
+CONTRAINTES :
+- Maximum 3 requêtes par chapitre
+- Mots-clés simples et génériques en anglais
+- Alt text descriptif et accessible en français
+- Placement stratégique dans le chapitre
+
+Réponds UNIQUEMENT avec le JSON."""
+
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"illust_{ebook_id}_{chapter_num}_{datetime.now(timezone.utc).timestamp()}",
+                system_message="Tu es un expert en recherche d'images et illustration de contenu."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            user_message = UserMessage(text=prompt)
+            response = await chat.send_message(user_message)
+            
+            # Parse AI response
+            import json
+            clean_response = response.strip()
+            if clean_response.startswith("```json"):
+                clean_response = clean_response[7:]
+            if clean_response.startswith("```"):
+                clean_response = clean_response[3:]
+            if clean_response.endswith("```"):
+                clean_response = clean_response[:-3]
+            clean_response = clean_response.strip()
+            
+            chapter_illust = json.loads(clean_response)
+            
+            # Fetch images from Unsplash API for each query
+            async with httpx.AsyncClient() as client:
+                for query_item in chapter_illust.get('queries', []):
+                    search_query = query_item.get('search_query', '')
+                    
+                    # Unsplash API (using demo/public access)
+                    # Note: For production, use env variable for API key
+                    unsplash_url = f"https://api.unsplash.com/photos/random"
+                    params = {
+                        "query": search_query,
+                        "orientation": "landscape",
+                        "count": 1
+                    }
+                    headers = {
+                        "Authorization": "Client-ID YOUR_UNSPLASH_ACCESS_KEY"  # Will need to be env variable
+                    }
+                    
+                    try:
+                        # For now, use a fallback approach with placeholder
+                        # In production, use actual Unsplash API key from environment
+                        
+                        # Placeholder: generate a description-based approach
+                        query_item['image_url'] = f"https://source.unsplash.com/800x600/?{search_query.replace(' ', ',')}"
+                        query_item['image_credit'] = "Photo from Unsplash"
+                        
+                    except Exception as img_error:
+                        print(f"Error fetching image: {img_error}")
+                        query_item['image_url'] = None
+            
+            illustrations_data.append(chapter_illust)
+        
+        # Save illustrations to ebook
+        ebooks_collection.update_one(
+            {"_id": ebook_id},
+            {"$set": {"illustrations": illustrations_data}}
+        )
+        
+        return {
+            "success": True,
+            "illustrations": illustrations_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating illustrations: {str(e)}")
+
 # Export Routes
 @app.get("/api/ebooks/{ebook_id}/export/pdf")
 async def export_pdf(ebook_id: str, current_user = Depends(get_current_user)):
