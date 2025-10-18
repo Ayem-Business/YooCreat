@@ -882,11 +882,14 @@ const EbookViewer = () => {
         // Mettre à jour l'ebook avec la couverture
         setEbook({ ...ebook, cover: response.data.cover });
         setCoverGenerated(true);
-        alert('Couverture générée avec succès !');
       }
     } catch (error) {
       console.error('Error generating cover:', error);
-      alert('Erreur lors de la génération de la couverture. Veuillez réessayer.');
+      if (error.response?.status === 401) {
+        alert('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      }
     } finally {
       setGeneratingCover(false);
     }
