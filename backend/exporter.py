@@ -39,6 +39,8 @@ class EbookExporter:
         self.chapters = ebook_data.get('chapters', [])
         self.description = ebook_data.get('description', '')
         self.cover = ebook_data.get('cover', {})
+        self.toc = ebook_data.get('toc', [])
+        self.legal_pages = ebook_data.get('legal_pages', {})
     
     def export_to_pdf(self) -> BytesIO:
         """
