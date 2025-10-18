@@ -901,6 +901,40 @@ const EbookViewer = () => {
     }
   };
 
+  const handleGenerateLegal = async () => {
+    setGeneratingLegal(true);
+    try {
+      const currentYear = new Date().getFullYear();
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/generate-legal-pages`,
+        { 
+          ebook_id: id,
+          year: currentYear,
+          edition: "Première édition"
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Mettre à jour l'ebook avec les pages légales
+        setEbook({ ...ebook, legal_pages: response.data.legal_pages });
+        setLegalGenerated(true);
+      }
+    } catch (error) {
+      console.error('Error generating legal pages:', error);
+      if (error.response?.status === 401) {
+        alert('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      }
+    } finally {
+      setGeneratingLegal(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
