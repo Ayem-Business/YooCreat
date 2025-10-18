@@ -807,6 +807,10 @@ const EbookViewer = () => {
         if (response.data.cover) {
           setCoverGenerated(true);
         }
+        // Check if legal pages already exist
+        if (response.data.legal_pages) {
+          setLegalGenerated(true);
+        }
       } catch (error) {
         console.error('Error fetching ebook:', error);
       } finally {
