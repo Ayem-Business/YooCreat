@@ -100,11 +100,11 @@ class YooCreatAPITester:
         try:
             headers = {"Authorization": f"Bearer {self.auth_token}"}
             toc_data = {
-                "author": "Marie Dubois",
-                "title": "Guide Pratique de la Productivité Moderne",
-                "tone": "Professionnel",
-                "target_audience": ["Adultes", "Professionnels"],
-                "description": "Un guide complet pour améliorer sa productivité au travail et dans la vie personnelle",
+                "author": "Dr. Sophie Martin",
+                "title": "Guide Santé Mentale",
+                "tone": "Bienveillant",
+                "target_audience": ["Adultes", "Professionnels de santé"],
+                "description": "Un guide complet pour comprendre et améliorer sa santé mentale au quotidien",
                 "chapters_count": 3,
                 "length": "Moyen"
             }
