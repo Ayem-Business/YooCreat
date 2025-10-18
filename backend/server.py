@@ -74,7 +74,7 @@ class GenerateTOC(BaseModel):
 
 class GenerateContent(BaseModel):
     ebook_id: str
-    toc: List[Dict[str, str]]
+    toc: List[Dict[str, Any]]
 
 # Helper Functions
 def hash_password(password: str) -> str:
