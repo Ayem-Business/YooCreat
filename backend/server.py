@@ -96,8 +96,33 @@ def create_access_token(data: dict) -> str:
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+async def get_current_user(
+    request: Request,
+    session_token: Optional[str] = Cookie(None),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
+):
+    # Priority 1: Check session_token from cookie
+    token = session_token
+    
+    # Priority 2: Check Authorization header (JWT or session_token)
+    if not token and credentials:
+        token = credentials.credentials
+    
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # First try as session_token (Emergent OAuth)
+    session = user_sessions_collection.find_one({"session_token": token})
+    if session:
+        # Check if session is expired
+        if session["expires_at"] < datetime.now(timezone.utc):
+            raise HTTPException(status_code=401, detail="Session expired")
+        
+        user = users_collection.find_one({"_id": session["user_id"]})
+        if user:
+            return user
+    
+    # Then try as JWT token (email/password auth)
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id: str = payload.get("sub")
