@@ -947,6 +947,64 @@ const EbookViewer = () => {
     }
   };
 
+  const handleGenerateTheme = async () => {
+    setGeneratingTheme(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/generate-visual-theme`,
+        { ebook_id: id },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Mettre à jour l'ebook avec le thème visuel
+        setEbook({ ...ebook, visual_theme: response.data.visual_theme });
+        setThemeGenerated(true);
+      }
+    } catch (error) {
+      console.error('Error generating visual theme:', error);
+      if (error.response?.status === 401) {
+        alert('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      }
+    } finally {
+      setGeneratingTheme(false);
+    }
+  };
+
+  const handleGenerateIllustrations = async () => {
+    setGeneratingIllustrations(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/generate-illustrations`,
+        { ebook_id: id },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Mettre à jour l'ebook avec les illustrations
+        setEbook({ ...ebook, illustrations: response.data.illustrations });
+        setIllustrationsGenerated(true);
+      }
+    } catch (error) {
+      console.error('Error generating illustrations:', error);
+      if (error.response?.status === 401) {
+        alert('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      }
+    } finally {
+      setGeneratingIllustrations(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
