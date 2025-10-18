@@ -538,7 +538,7 @@ Réponds UNIQUEMENT avec le contenu du chapitre (sans répéter le titre princip
             {"$set": {
                 "chapters": chapters,
                 "status": "completed",
-                "completed_at": datetime.utcnow().isoformat()
+                "completed_at": datetime.now(timezone.utc).isoformat()
             }}
         )
         
@@ -549,6 +549,104 @@ Réponds UNIQUEMENT avec le contenu du chapitre (sans répéter le titre princip
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating content: {str(e)}")
+
+@app.post("/api/ebooks/generate-cover")
+async def generate_cover(ebook_id: str, current_user = Depends(get_current_user)):
+    """Generate a text-based cover page design"""
+    try:
+        # Get ebook
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Generate cover description/design
+        prompt = f"""Tu es un designer de couvertures de livres professionnel.
+
+INFORMATIONS DU LIVRE :
+- Titre : {ebook['title']}
+- Auteur : {ebook['author']}
+- Ton : {ebook['tone']}
+- Public cible : {', '.join(ebook['target_audience'])}
+- Description : {ebook['description']}
+
+MISSION : Crée une description détaillée de couverture de livre professionnelle qui inclut :
+
+1. **DESIGN VISUEL** :
+   - Palette de couleurs recommandée (3-4 couleurs spécifiques)
+   - Style graphique (moderne, minimaliste, classique, artistique, etc.)
+   - Disposition des éléments (titre, sous-titre, auteur)
+   
+2. **TYPOGRAPHIE** :
+   - Police suggérée pour le titre (avec justification)
+   - Taille et style recommandés
+   
+3. **ÉLÉMENTS GRAPHIQUES** :
+   - Icônes, illustrations ou images suggérées
+   - Mood et atmosphère visuelle
+   
+4. **ACCROCHE** :
+   - Un sous-titre ou tagline percutant (1 phrase)
+   - Une phrase d'accroche pour le dos de couverture
+
+Format de réponse (JSON) :
+{{
+  "title": "{ebook['title']}",
+  "author": "{ebook['author']}",
+  "subtitle": "Sous-titre accrocheur ici",
+  "design": {{
+    "colors": ["#HEX1", "#HEX2", "#HEX3"],
+    "style": "description du style",
+    "layout": "description de la disposition"
+  }},
+  "typography": {{
+    "title_font": "Nom de la police",
+    "style_notes": "Notes sur le style"
+  }},
+  "graphics": {{
+    "suggestions": ["élément 1", "élément 2"],
+    "mood": "description de l'atmosphère"
+  }},
+  "tagline": "Phrase d'accroche percutante",
+  "back_cover_text": "Texte pour le dos de couverture (2-3 phrases)"
+}}
+
+Réponds UNIQUEMENT avec le JSON."""
+
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"cover_{ebook_id}_{datetime.now(timezone.utc).timestamp()}",
+            system_message="Tu es un designer professionnel de couvertures de livres."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        user_message = UserMessage(text=prompt)
+        response = await chat.send_message(user_message)
+        
+        # Clean and parse response
+        import json
+        clean_response = response.strip()
+        if clean_response.startswith("```json"):
+            clean_response = clean_response[7:]
+        if clean_response.startswith("```"):
+            clean_response = clean_response[3:]
+        if clean_response.endswith("```"):
+            clean_response = clean_response[:-3]
+        clean_response = clean_response.strip()
+        
+        cover_data = json.loads(clean_response)
+        
+        # Save cover to ebook
+        ebooks_collection.update_one(
+            {"_id": ebook_id},
+            {"$set": {"cover": cover_data}}
+        )
+        
+        return {
+            "success": True,
+            "cover": cover_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating cover: {str(e)}")
 
 @app.post("/api/ebooks/create")
 async def create_ebook(ebook_data: EbookCreate, current_user = Depends(get_current_user)):
