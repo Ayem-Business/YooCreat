@@ -789,15 +789,364 @@ const EbookViewer = () => {
   const navigate = useNavigate();
   const [ebook, setEbook] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [generatingCover, setGeneratingCover] = useState(false);
+  const [coverGenerated, setCoverGenerated] = useState(false);
 
   useEffect(() => {
     const fetchEbook = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/ebooks/${id}`);
+        const response = await axios.get(`${API_URL}/api/ebooks/${id}`, {
+          withCredentials: true
+        });
         setEbook(response.data);
+        // Check if cover already exists
+        if (response.data.cover) {
+          setCoverGenerated(true);
+        }
       } catch (error) {
         console.error('Error fetching ebook:', error);
       } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEbook();
+  }, [id]);
+
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/ebooks/${id}/export/${format}`,
+        {
+          responseType: 'blob',
+          withCredentials: true
+        }
+      );
+
+      // Déterminer l'extension
+      const extensions = {
+        pdf: 'pdf',
+        epub: 'epub',
+        html: 'html',
+        mobi: 'epub',
+        docx: 'docx'
+      };
+
+      // Créer un lien de téléchargement
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${ebook.title.replace(/[^a-z0-9]/gi, '_')}.${extensions[format]}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setShowExportMenu(false);
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert('Erreur lors de l\'export. Veuillez réessayer.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleGenerateCover = async () => {
+    setGeneratingCover(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/generate-cover`,
+        id,
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Mettre à jour l'ebook avec la couverture
+        setEbook({ ...ebook, cover: response.data.cover });
+        setCoverGenerated(true);
+        alert('Couverture générée avec succès !');
+      }
+    } catch (error) {
+      console.error('Error generating cover:', error);
+      alert('Erreur lors de la génération de la couverture. Veuillez réessayer.');
+    } finally {
+      setGeneratingCover(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  if (!ebook) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="card text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Ebook non trouvé</h2>
+          <button onClick={() => navigate('/dashboard')} className="btn-primary">
+            Retour au Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <nav className="gradient-bg text-white p-4 shadow-lg">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <FaBook className="text-3xl" />
+            <h1 className="text-2xl font-bold">YooCreat</h1>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all"
+            data-testid="back-to-dashboard"
+          >
+            ← Retour au Dashboard
+          </button>
+        </div>
+      </nav>
+
+      <div className="container mx-auto p-8 max-w-5xl">
+        {/* Header avec actions */}
+        <div className="card mb-6">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold text-gray-800 mb-2" data-testid="ebook-title">{ebook.title}</h1>
+              <p className="text-xl text-gray-600 mb-4">Par {ebook.author}</p>
+              <p className="text-gray-700 mb-4">{ebook.description}</p>
+              <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <span>📚 {ebook.chapters_count} chapitres</span>
+                <span>📄 {ebook.length}</span>
+                <span>🎭 Ton: {ebook.tone}</span>
+              </div>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex flex-col space-y-3 ml-6">
+              {/* Bouton Export */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                  className="bg-gradient-to-r from-primary-blue to-primary-violet text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center space-x-2 whitespace-nowrap"
+                  data-testid="export-button"
+                >
+                  <span>📤</span>
+                  <span>Exporter</span>
+                </button>
+
+                {/* Menu d'export */}
+                {showExportMenu && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border-2 border-gray-200 z-10">
+                    <div className="p-2">
+                      <button
+                        onClick={() => handleExport('pdf')}
+                        disabled={exporting}
+                        className="w-full text-left px-4 py-3 rounded-md hover:bg-blue-50 transition-all flex items-center space-x-3"
+                        data-testid="export-pdf"
+                      >
+                        <span className="text-2xl">📄</span>
+                        <div>
+                          <div className="font-semibold text-gray-800">PDF</div>
+                          <div className="text-xs text-gray-500">Impression professionnelle</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handleExport('epub')}
+                        disabled={exporting}
+                        className="w-full text-left px-4 py-3 rounded-md hover:bg-purple-50 transition-all flex items-center space-x-3"
+                        data-testid="export-epub"
+                      >
+                        <span className="text-2xl">📖</span>
+                        <div>
+                          <div className="font-semibold text-gray-800">EPUB</div>
+                          <div className="text-xs text-gray-500">Liseuses électroniques</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handleExport('html')}
+                        disabled={exporting}
+                        className="w-full text-left px-4 py-3 rounded-md hover:bg-orange-50 transition-all flex items-center space-x-3"
+                        data-testid="export-html"
+                      >
+                        <span className="text-2xl">🌐</span>
+                        <div>
+                          <div className="font-semibold text-gray-800">HTML</div>
+                          <div className="text-xs text-gray-500">Flipbook interactif</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handleExport('docx')}
+                        disabled={exporting}
+                        className="w-full text-left px-4 py-3 rounded-md hover:bg-blue-50 transition-all flex items-center space-x-3"
+                        data-testid="export-docx"
+                      >
+                        <span className="text-2xl">📝</span>
+                        <div>
+                          <div className="font-semibold text-gray-800">DOCX</div>
+                          <div className="text-xs text-gray-500">Édition Word</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handleExport('mobi')}
+                        disabled={exporting}
+                        className="w-full text-left px-4 py-3 rounded-md hover:bg-green-50 transition-all flex items-center space-x-3"
+                        data-testid="export-mobi"
+                      >
+                        <span className="text-2xl">📚</span>
+                        <div>
+                          <div className="font-semibold text-gray-800">MOBI</div>
+                          <div className="text-xs text-gray-500">Kindle</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bouton Générer Couverture */}
+              <button
+                onClick={handleGenerateCover}
+                disabled={generatingCover}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 whitespace-nowrap ${
+                  coverGenerated
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                    : 'bg-primary-orange text-white hover:bg-primary-orange-dark'
+                }`}
+                data-testid="generate-cover-button"
+              >
+                {generatingCover ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    <span>Génération...</span>
+                  </>
+                ) : coverGenerated ? (
+                  <>
+                    <FaCheckCircle />
+                    <span>Couverture OK</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🎨</span>
+                    <span>Générer Couverture</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Affichage de la couverture générée */}
+        {ebook.cover && (
+          <div className="card mb-6" data-testid="cover-display">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">📐 Design de Couverture</h2>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Visuel de la couverture */}
+              <div 
+                className="rounded-lg p-8 text-center flex flex-col justify-center"
+                style={{
+                  background: ebook.cover.design?.colors 
+                    ? `linear-gradient(135deg, ${ebook.cover.design.colors[0]}, ${ebook.cover.design.colors[1]})`
+                    : 'linear-gradient(135deg, #3B82F6, #8B5CF6)'
+                }}
+              >
+                <h3 className="text-3xl font-bold text-white mb-4">{ebook.cover.title}</h3>
+                <p className="text-xl text-white/90 mb-6">par {ebook.cover.author}</p>
+                {ebook.cover.subtitle && (
+                  <p className="text-lg text-yellow-300 italic">{ebook.cover.subtitle}</p>
+                )}
+              </div>
+
+              {/* Détails du design */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-2">🎨 Palette de couleurs</h3>
+                  <div className="flex space-x-2">
+                    {ebook.cover.design?.colors?.map((color, idx) => (
+                      <div
+                        key={idx}
+                        className="w-12 h-12 rounded-md shadow"
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-gray-700 mb-2">✏️ Style</h3>
+                  <p className="text-gray-600">{ebook.cover.design?.style}</p>
+                </div>
+
+                {ebook.cover.tagline && (
+                  <div>
+                    <h3 className="font-bold text-gray-700 mb-2">💬 Accroche</h3>
+                    <p className="text-gray-600 italic">"{ebook.cover.tagline}"</p>
+                  </div>
+                )}
+
+                {ebook.cover.typography && (
+                  <div>
+                    <h3 className="font-bold text-gray-700 mb-2">🔤 Typographie</h3>
+                    <p className="text-gray-600">{ebook.cover.typography.title_font}</p>
+                    <p className="text-sm text-gray-500">{ebook.cover.typography.style_notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {ebook.cover.back_cover_text && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-bold text-gray-700 mb-2">📄 Texte de dos de couverture</h3>
+                <p className="text-gray-600">{ebook.cover.back_cover_text}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Contenu des chapitres */}
+        {ebook.chapters && ebook.chapters.length > 0 ? (
+          <div className="space-y-6">
+            {ebook.chapters.map((chapter, index) => (
+              <div key={index} className="card" data-testid={`chapter-${index}`}>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="bg-primary-violet text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                    {chapter.number}
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800">{chapter.title}</h2>
+                </div>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 whitespace-pre-wrap">{chapter.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="card text-center py-8">
+            <p className="text-gray-600">Ce livre est encore en brouillon. Le contenu n'a pas encore été généré.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
         setLoading(false);
       }
     };
