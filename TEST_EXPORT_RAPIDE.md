@@ -11,7 +11,7 @@
 
 ### Étape 1 : Ouvrir l'Application
 - Local : http://localhost:3000
-- Production : https://ebook-factory-15.preview.emergentagent.com
+- Production : https://smart-ebook-gen-1.preview.emergentagent.com
 
 ### Étape 2 : Se Connecter
 - Utilisez votre compte existant

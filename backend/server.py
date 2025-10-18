@@ -26,8 +26,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000", 
         "http://localhost:8001",
-        "https://ebook-factory-15.preview.emergentagent.com",
-        "https://*.preview.emergentagent.com"
+        "https://smart-ebook-gen-1.preview.emergentagent.com",
+        "https://smart-ebook-gen-1.preview.emergentagent.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
