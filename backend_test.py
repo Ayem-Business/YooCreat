@@ -16,7 +16,7 @@ BACKEND_URL = "https://smart-ebook-gen-1.preview.emergentagent.com/api"
 
 class YooCreatAPITester:
     def __init__(self):
-        self.client = httpx.AsyncClient(timeout=60.0)
+        self.client = httpx.AsyncClient(timeout=180.0)  # 3 minutes for AI generation
         self.auth_token = None
         self.user_id = None
         self.test_ebook_id = None
