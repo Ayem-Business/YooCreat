@@ -367,8 +367,8 @@ class EbookExporter:
             
             story.append(PageBreak())
         
-        # Build PDF
-        doc.build(story)
+        # Build PDF with page numbers
+        doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
         buffer.seek(0)
         return buffer
     
