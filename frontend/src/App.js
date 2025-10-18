@@ -13,11 +13,58 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [processingOAuth, setProcessingOAuth] = useState(false);
+
+  // Check for OAuth session_id in URL fragment
+  useEffect(() => {
+    const processOAuthCallback = async () => {
+      const hash = window.location.hash;
+      const params = new URLSearchParams(hash.substring(1));
+      const sessionId = params.get('session_id');
+
+      if (sessionId && !processingOAuth) {
+        setProcessingOAuth(true);
+        setLoading(true);
+
+        try {
+          // Exchange session_id for user data
+          const response = await axios.post(`${API_URL}/api/auth/google`, {
+            session_id: sessionId
+          }, {
+            withCredentials: true // Enable cookies
+          });
+
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          // Set user data
+          setUser(response.data.user);
+          setToken(response.data.session_token);
+          
+          // No need to set Authorization header for cookie-based auth
+          // But keep it for backward compatibility with JWT
+          if (response.data.session_token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.session_token}`;
+          }
+        } catch (error) {
+          console.error('OAuth error:', error);
+          alert('Erreur lors de la connexion avec Google. Veuillez réessayer.');
+        } finally {
+          setLoading(false);
+          setProcessingOAuth(false);
+        }
+      }
+    };
+
+    processOAuthCallback();
+  }, [processingOAuth]);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/auth/me`);
+        const response = await axios.get(`${API_URL}/api/auth/me`, {
+          withCredentials: true
+        });
         setUser(response.data);
       } catch (error) {
         logout();
@@ -26,13 +73,17 @@ const AuthProvider = ({ children }) => {
       }
     };
 
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
+    // Don't fetch if we're processing OAuth
+    if (!processingOAuth) {
+      if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        fetchUser();
+      } else {
+        // Try to fetch with cookie only
+        fetchUser();
+      }
     }
-  }, [token]);
+  }, [token, processingOAuth]);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
@@ -41,7 +92,15 @@ const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await axios.post(`${API_URL}/api/auth/logout`, {}, {
+        withCredentials: true
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
