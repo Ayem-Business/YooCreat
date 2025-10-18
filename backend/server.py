@@ -52,9 +52,14 @@ class UserLogin(BaseModel):
     password: str
 
 class GoogleAuth(BaseModel):
-    google_token: str
-    email: EmailStr
+    session_id: str
+
+class GoogleSessionData(BaseModel):
+    id: str
+    email: str
     name: str
+    picture: str
+    session_token: str
 
 class EbookCreate(BaseModel):
     author: str
