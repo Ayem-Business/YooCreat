@@ -148,8 +148,10 @@ const AuthPage = () => {
   };
 
   const handleGoogleLogin = () => {
-    // Simplified Google login - in production, use proper OAuth flow
-    alert('Connexion Google: Cette fonctionnalité nécessite la configuration OAuth2 complète via Emergent. Pour l\'instant, utilisez l\'inscription par email.');
+    // Redirect to Emergent OAuth with redirect back to dashboard
+    const redirectUrl = `${window.location.origin}/dashboard`;
+    const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    window.location.href = authUrl;
   };
 
   return (
