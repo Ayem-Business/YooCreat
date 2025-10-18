@@ -484,32 +484,43 @@ Numéro : {chapter['number']}
 Titre : {chapter['title']}
 Objectif : {chapter['description']}{transition_context}{next_chapter_hint}
 
-MISSION : Rédige un chapitre COMPLET et ENGAGEANT (1000-1500 mots) qui :
+MISSION : Rédige un chapitre COMPLET et ENGAGEANT (1200-1800 mots) structuré ainsi :
 
-1. **INTRODUCTION DU CHAPITRE** (1-2 paragraphes)
-   - Accroche avec une question, anecdote ou fait surprenant
-   - Annonce ce qui sera couvert
+1. **OUVERTURE** (2-3 paragraphes)
+   - Accroche puissante avec question, anecdote ou fait surprenant
+   - Annonce claire de ce qui sera couvert dans ce chapitre
 
-2. **DÉVELOPPEMENT** (corps principal)
-   - Explications claires et structurées
-   - 2-3 exemples concrets et pertinents
-   - Anecdotes illustratives selon le ton {ebook['tone']}
-   - Étapes pratiques ou points détaillés
-   - Analogies si nécessaire pour clarifier
+2. **DÉVELOPPEMENT EN SECTIONS** (corps principal)
+   Organise le contenu en 2-4 sections claires avec :
+   - Pour chaque section : un titre descriptif précédé de "🔹" (exemple: "🔹 La première étape vers le changement")
+   - Explications claires et approfondies
+   - 2-3 exemples concrets et pertinents par section
+   - Anecdotes illustratives adaptées au ton {ebook['tone']}
+   - Étapes pratiques ou conseils actionnables
+   - Analogies ou métaphores pour clarifier les concepts complexes
 
-3. **CONCLUSION DU CHAPITRE** (1 paragraphe)
-   - Résumé des points essentiels
-   - Takeaway principal
-   - Connexion naturelle vers le chapitre suivant
+3. **EN SYNTHÈSE** (section finale OBLIGATOIRE - 1 paragraphe)
+   Titre de section : "🔹 En synthèse"
+   - Résumé concis des 3-4 points clés du chapitre
+   - Le principal enseignement à retenir
+   - Lien subtil avec le chapitre suivant
 
-EXIGENCES :
+4. **RÉFLEXION PERSONNELLE** (section finale OBLIGATOIRE)
+   Titre de section : "🔹 Question de réflexion"
+   - 1-2 questions ouvertes qui invitent le lecteur à appliquer ce qu'il a appris
+   - Formulation engageante et personnalisée
+
+EXIGENCES STRICTES :
 - Style : {ebook['tone']}
 - Public : {', '.join(ebook['target_audience'])}
-- Structure : Utilise des sous-titres internes (##) pour organiser
-- Exemples : Minimum 2 exemples concrets
-- Longueur : Dense et riche, environ 1000-1500 mots
+- Structuration : Utilise UNIQUEMENT le format "🔹 Titre de section" pour les sous-parties
+- ⚠️ INTERDIT : N'utilise JAMAIS les symboles #, ##, ### ou autres balises Markdown
+- ⚠️ INTERDIT : Ne répète JAMAIS le titre principal du chapitre dans le contenu
+- Exemples : Minimum 2-3 exemples concrets et situés
+- Longueur : Dense et riche, environ 1200-1800 mots
+- Langage : 100% en français
 
-Réponds UNIQUEMENT avec le contenu du chapitre (sans répéter le titre principal)."""
+Réponds UNIQUEMENT avec le contenu du chapitre (sans le titre principal, il sera ajouté automatiquement)."""
 
             chat = LlmChat(
                 api_key=EMERGENT_LLM_KEY,
