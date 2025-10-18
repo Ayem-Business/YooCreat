@@ -815,6 +815,14 @@ const EbookViewer = () => {
         if (response.data.legal_pages) {
           setLegalGenerated(true);
         }
+        // Check if visual theme already exists
+        if (response.data.visual_theme) {
+          setThemeGenerated(true);
+        }
+        // Check if illustrations already exist
+        if (response.data.illustrations) {
+          setIllustrationsGenerated(true);
+        }
       } catch (error) {
         console.error('Error fetching ebook:', error);
       } finally {
