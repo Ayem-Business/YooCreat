@@ -208,6 +208,9 @@ class YooCreatAPITester:
                 
         except Exception as e:
             self.log(f"❌ Content generation error: {str(e)}", "ERROR")
+            # Try to get more details about the error
+            import traceback
+            self.log(f"Full traceback: {traceback.format_exc()}", "ERROR")
             return False
     
     async def test_legal_pages_generation(self):
