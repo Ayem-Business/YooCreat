@@ -32,6 +32,7 @@ client = MongoClient(os.getenv("MONGO_URL"))
 db = client.yoocreat
 users_collection = db.users
 ebooks_collection = db.ebooks
+user_sessions_collection = db.user_sessions
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
