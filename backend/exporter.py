@@ -7,10 +7,11 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle, KeepTogether
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus.tableofcontents import TableOfContents
 
 from ebooklib import epub
 from docx import Document
@@ -21,6 +22,24 @@ import markdown2
 from io import BytesIO
 import os
 import re
+
+
+def add_page_number(canvas, doc):
+    """
+    Add page numbers to the PDF
+    Called by reportlab for each page
+    """
+    canvas.saveState()
+    page_num = canvas.getPageNumber()
+    text = f"Page {page_num}"
+    canvas.setFont('Helvetica', 9)
+    canvas.setFillColor(colors.grey)
+    canvas.drawCentredString(
+        A4[0] / 2.0,
+        0.5 * inch,
+        text
+    )
+    canvas.restoreState()
 
 
 class EbookExporter:
