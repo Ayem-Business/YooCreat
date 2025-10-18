@@ -449,7 +449,7 @@ EXIGENCES STRICTES :
 Réponds UNIQUEMENT avec le texte de l'introduction (le titre "Introduction" sera ajouté automatiquement)."""
 
             elif chapter_type == 'conclusion':
-                prompt = f"""Tu es un auteur professionnel spécialisé en conclusions mémorables.
+                prompt = f"""Tu es un auteur professionnel spécialisé en conclusions mémorables et inspirantes.
 
 CONTEXTE DU LIVRE :
 - Titre : "{ebook['title']}"
@@ -458,21 +458,39 @@ CONTEXTE DU LIVRE :
 - Public cible : {', '.join(ebook['target_audience'])}
 - Parcours du livre : {ebook['description']}
 
-MISSION : Rédige une CONCLUSION puissante (700-900 mots) qui :
-1. **SYNTHÉTISE** les points clés abordés dans le livre
-2. **RENFORCE** le message principal
-3. **INSPIRE** le lecteur à agir
-4. **DONNE** des prochaines étapes concrètes
-5. **TERMINE** sur une note mémorable et motivante
+MISSION : Rédige une CONCLUSION puissante (900-1200 mots) structurée ainsi :
 
-Style : {ebook['tone']}, adapté à {', '.join(ebook['target_audience'])}.
+1. **LE VOYAGE ACCOMPLI** (2-3 paragraphes)
+   - Rappelle le point de départ (où était le lecteur au début)
+   - Célèbre le chemin parcouru
+   - Reconnais l'effort et l'engagement du lecteur
 
-Inclus :
-- Un rappel des transformations promises
-- Un call-to-action clair
-- Une ouverture vers l'avenir
+2. **LES ENSEIGNEMENTS CLÉS** (2-3 paragraphes)
+   - Synthèse des 4-5 points principaux du livre
+   - Reformule les messages essentiels de manière mémorable
+   - Utilise des formulations impactantes qui restent en tête
 
-Réponds UNIQUEMENT avec le texte de la conclusion (sans titre)."""
+3. **LE PASSAGE À L'ACTION** (2-3 paragraphes)
+   - Liste 3-4 actions concrètes que le lecteur peut entreprendre DÈS MAINTENANT
+   - Donne des étapes spécifiques et réalisables
+   - Crée un sentiment d'urgence positive et d'enthousiasme
+
+4. **LA VISION INSPIRANTE** (2 paragraphes)
+   - Peins le tableau de la transformation possible
+   - Projette le lecteur dans son futur réussi
+   - Termine sur une note émotionnelle forte et motivante
+   - Une phrase finale mémorable qui résume l'essence du livre
+
+EXIGENCES STRICTES :
+- Style : {ebook['tone']}, adapté à {', '.join(ebook['target_audience'])}
+- ⚠️ INTERDIT : N'utilise JAMAIS les symboles #, ##, ### ou autres balises Markdown
+- ⚠️ INTERDIT : Ne répète JAMAIS le mot "Conclusion" dans le texte
+- Structure : Utilise UNIQUEMENT le format "🔹 Titre de section" si nécessaire pour des sous-parties
+- Ton : Inspirant, optimiste, et orienté vers l'action
+- Impact : Crée une fin mémorable qui donne au lecteur l'envie de recommencer sa lecture
+- Langage : 100% en français
+
+Réponds UNIQUEMENT avec le texte de la conclusion (le titre "Conclusion" sera ajouté automatiquement)."""
 
             else:  # chapter
                 # Contexte du chapitre précédent pour transitions
