@@ -1202,6 +1202,67 @@ const EbookViewer = () => {
                   </>
                 )}
               </button>
+
+              {/* Bouton Générer Thème Visuel */}
+              <button
+                onClick={handleGenerateTheme}
+                disabled={generatingTheme}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 whitespace-nowrap ${
+                  themeGenerated
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600'
+                }`}
+                data-testid="generate-theme-button"
+              >
+                {generatingTheme ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    <span>Génération...</span>
+                  </>
+                ) : themeGenerated ? (
+                  <>
+                    <FaCheckCircle />
+                    <span>Thème Visuel OK</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🎨</span>
+                    <span>Générer Thème Visuel</span>
+                  </>
+                )}
+              </button>
+
+              {/* Bouton Générer Illustrations */}
+              <button
+                onClick={handleGenerateIllustrations}
+                disabled={generatingIllustrations || !ebook.chapters || ebook.chapters.length === 0}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 whitespace-nowrap ${
+                  illustrationsGenerated
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                    : (!ebook.chapters || ebook.chapters.length === 0)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-pink-500 to-orange-500 text-white hover:from-pink-600 hover:to-orange-600'
+                }`}
+                data-testid="generate-illustrations-button"
+                title={!ebook.chapters || ebook.chapters.length === 0 ? 'Générez le contenu d\'abord' : ''}
+              >
+                {generatingIllustrations ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    <span>Génération...</span>
+                  </>
+                ) : illustrationsGenerated ? (
+                  <>
+                    <FaCheckCircle />
+                    <span>Illustrations OK</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🖼️</span>
+                    <span>Générer Illustrations</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
