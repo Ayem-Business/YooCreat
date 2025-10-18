@@ -1,0 +1,54 @@
+.App {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #F97316 100%);
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-primary-blue to-primary-violet text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105;
+}
+
+.btn-secondary {
+  @apply bg-primary-orange text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-orange-dark transition-all duration-300;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-xl p-6;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue transition-colors;
+}
+
+.select-field {
+  @apply w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue transition-colors bg-white cursor-pointer;
+}
+
+.label {
+  @apply block text-gray-700 font-semibold mb-2;
+}
+
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3B82F6;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.chapter-card {
+  @apply bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border-2 border-primary-violet hover:shadow-lg transition-all duration-300;
+}
+
+.ebook-card {
+  @apply bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-primary-violet;
+}
