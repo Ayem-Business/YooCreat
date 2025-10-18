@@ -90,6 +90,12 @@ class GenerateContent(BaseModel):
     ebook_id: str
     toc: List[Dict[str, Any]]
 
+class GenerateVisualThemeRequest(BaseModel):
+    ebook_id: str
+
+class GenerateIllustrationsRequest(BaseModel):
+    ebook_id: str
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
