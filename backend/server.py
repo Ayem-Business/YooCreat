@@ -322,17 +322,19 @@ CONTEXTE DU LIVRE :
 - Longueur : {data.length}
 
 MISSION :
-Crée une structure de livre COHÉRENTE et PROFESSIONNELLE avec :
+Crée une structure de livre DÉTAILLÉE, COHÉRENTE et PROFESSIONNELLE avec :
 1. Une INTRODUCTION captivante (chapitre 0)
 2. {data.chapters_count} chapitres de contenu principal (numérotés 1 à {data.chapters_count})
 3. Une CONCLUSION percutante (dernier chapitre)
 
-EXIGENCES pour chaque élément :
+EXIGENCES pour chaque chapitre :
 - Numéro : 0 pour intro, 1-{data.chapters_count} pour chapitres, {data.chapters_count + 1} pour conclusion
 - Titre : Accrocheur, pertinent, adapté au ton {data.tone}
 - Description : 2-3 phrases décrivant le contenu et la progression logique
+- Sous-titres : OBLIGATOIRE - 2-4 sous-titres par chapitre qui détaillent les sections principales
 - Assure une PROGRESSION NATURELLE d'un chapitre à l'autre
 - Intègre des TRANSITIONS conceptuelles entre chapitres
+- Langage : 100% en français
 
 Réponds UNIQUEMENT avec ce JSON valide (sans markdown, sans texte avant/après) :
 {{
@@ -341,12 +343,14 @@ Réponds UNIQUEMENT avec ce JSON valide (sans markdown, sans texte avant/après)
       "number": 0,
       "title": "Introduction",
       "description": "Accroche le lecteur, présente le sujet et annonce les bénéfices",
+      "subtitles": ["Pourquoi ce livre maintenant ?", "Ce que vous allez découvrir", "Comment tirer le meilleur parti de votre lecture"],
       "type": "introduction"
     }},
     {{
       "number": 1,
       "title": "Premier chapitre...",
       "description": "Description détaillée...",
+      "subtitles": ["Sous-titre 1", "Sous-titre 2", "Sous-titre 3"],
       "type": "chapter"
     }},
     ...
@@ -354,6 +358,7 @@ Réponds UNIQUEMENT avec ce JSON valide (sans markdown, sans texte avant/après)
       "number": {data.chapters_count + 1},
       "title": "Conclusion",
       "description": "Synthèse, call-to-action et ouverture",
+      "subtitles": ["Les enseignements clés", "Vos prochaines étapes", "La vision de votre transformation"],
       "type": "conclusion"
     }}
   ]
