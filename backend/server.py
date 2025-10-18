@@ -398,32 +398,121 @@ async def generate_content(data: GenerateContent, current_user = Depends(get_cur
             raise HTTPException(status_code=404, detail="Ebook not found")
         
         chapters = []
+        previous_chapter_summary = ""
         
-        for chapter in data.toc:
-            prompt = f"""Tu es un auteur professionnel de livres.
+        for idx, chapter in enumerate(data.toc):
+            chapter_type = chapter.get('type', 'chapter')
+            
+            # Prompt adapté selon le type de chapitre
+            if chapter_type == 'introduction':
+                prompt = f"""Tu es un auteur professionnel spécialisé en introductions captivantes.
 
-Rédige le contenu complet du chapitre suivant pour l'ebook "{ebook['title']}" :
-
-Chapitre {chapter['number']} : {chapter['title']}
-Description : {chapter['description']}
-
-Caractéristiques du livre :
+CONTEXTE DU LIVRE :
+- Titre : "{ebook['title']}"
 - Auteur : {ebook['author']}
 - Ton : {ebook['tone']}
 - Public cible : {', '.join(ebook['target_audience'])}
-- Contexte : {ebook['description']}
-- Longueur : {ebook['length']}
+- Objectif : {ebook['description']}
 
-Rédige un contenu riche et engageant d'environ 800-1200 mots pour ce chapitre.
-Utilise un style {ebook['tone']} adapté à {', '.join(ebook['target_audience'])}.
-Inclus des exemples concrets, des transitions fluides et une conclusion.
+MISSION : Rédige une INTRODUCTION percutante (800-1000 mots) qui :
+1. **ACCROCHE** le lecteur dès les premières lignes
+2. **PRÉSENTE** le problème ou sujet principal
+3. **EXPLIQUE** pourquoi ce livre est important pour le lecteur
+4. **ANNONCE** les bénéfices et ce qu'il va apprendre
+5. **CRÉE** l'anticipation pour la suite
 
-Réponds UNIQUEMENT avec le contenu du chapitre, sans titre ni numéro de chapitre (juste le texte)."""
+Style : {ebook['tone']}, adapté à {', '.join(ebook['target_audience'])}.
+
+Utilise :
+- Une anecdote personnelle ou une statistique marquante pour démarrer
+- Des questions qui interpellent le lecteur
+- Des promesses concrètes
+
+Réponds UNIQUEMENT avec le texte de l'introduction (sans titre)."""
+
+            elif chapter_type == 'conclusion':
+                prompt = f"""Tu es un auteur professionnel spécialisé en conclusions mémorables.
+
+CONTEXTE DU LIVRE :
+- Titre : "{ebook['title']}"
+- Auteur : {ebook['author']}
+- Ton : {ebook['tone']}
+- Public cible : {', '.join(ebook['target_audience'])}
+- Parcours du livre : {ebook['description']}
+
+MISSION : Rédige une CONCLUSION puissante (700-900 mots) qui :
+1. **SYNTHÉTISE** les points clés abordés dans le livre
+2. **RENFORCE** le message principal
+3. **INSPIRE** le lecteur à agir
+4. **DONNE** des prochaines étapes concrètes
+5. **TERMINE** sur une note mémorable et motivante
+
+Style : {ebook['tone']}, adapté à {', '.join(ebook['target_audience'])}.
+
+Inclus :
+- Un rappel des transformations promises
+- Un call-to-action clair
+- Une ouverture vers l'avenir
+
+Réponds UNIQUEMENT avec le texte de la conclusion (sans titre)."""
+
+            else:  # chapter
+                # Contexte du chapitre précédent pour transitions
+                transition_context = ""
+                if idx > 0 and previous_chapter_summary:
+                    transition_context = f"\n\nLIEN AVEC LE CHAPITRE PRÉCÉDENT :\n{previous_chapter_summary}\n→ Commence par une transition naturelle qui fait le pont entre ces idées."
+                
+                # Contexte du chapitre suivant
+                next_chapter_hint = ""
+                if idx < len(data.toc) - 1:
+                    next_chap = data.toc[idx + 1]
+                    next_chapter_hint = f"\n\nPRÉPARATION POUR LA SUITE :\nLe prochain chapitre abordera : {next_chap['title']}\n→ Termine par une phrase qui crée le lien avec ce sujet."
+
+                prompt = f"""Tu es un auteur professionnel expert en pédagogie et storytelling.
+
+CONTEXTE DU LIVRE :
+- Titre : "{ebook['title']}"
+- Auteur : {ebook['author']}
+- Ton : {ebook['tone']}
+- Public cible : {', '.join(ebook['target_audience'])}
+- Objectif global : {ebook['description']}
+
+CHAPITRE À RÉDIGER :
+Numéro : {chapter['number']}
+Titre : {chapter['title']}
+Objectif : {chapter['description']}{transition_context}{next_chapter_hint}
+
+MISSION : Rédige un chapitre COMPLET et ENGAGEANT (1000-1500 mots) qui :
+
+1. **INTRODUCTION DU CHAPITRE** (1-2 paragraphes)
+   - Accroche avec une question, anecdote ou fait surprenant
+   - Annonce ce qui sera couvert
+
+2. **DÉVELOPPEMENT** (corps principal)
+   - Explications claires et structurées
+   - 2-3 exemples concrets et pertinents
+   - Anecdotes illustratives selon le ton {ebook['tone']}
+   - Étapes pratiques ou points détaillés
+   - Analogies si nécessaire pour clarifier
+
+3. **CONCLUSION DU CHAPITRE** (1 paragraphe)
+   - Résumé des points essentiels
+   - Takeaway principal
+   - Connexion naturelle vers le chapitre suivant
+
+EXIGENCES :
+- Style : {ebook['tone']}
+- Public : {', '.join(ebook['target_audience'])}
+- Structure : Utilise des sous-titres internes (##) pour organiser
+- Exemples : Minimum 2 exemples concrets
+- Longueur : Dense et riche, environ 1000-1500 mots
+
+Réponds UNIQUEMENT avec le contenu du chapitre (sans répéter le titre principal)."""
 
             chat = LlmChat(
                 api_key=EMERGENT_LLM_KEY,
-                session_id=f"chapter_{data.ebook_id}_{chapter['number']}_{datetime.utcnow().timestamp()}",
-                system_message="Tu es un auteur professionnel expert en création de contenu littéraire de qualité."
+                session_id=f"chapter_{data.ebook_id}_{chapter['number']}_{datetime.now(timezone.utc).timestamp()}",
+                system_message="Tu es un auteur professionnel expert en création de contenu littéraire de haute qualité."
             ).with_model("openai", "gpt-4o-mini")
             
             user_message = UserMessage(text=prompt)
