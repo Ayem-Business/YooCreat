@@ -700,19 +700,19 @@ const EbookViewer = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchEbook = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/ebooks/${id}`);
+        setEbook(response.data);
+      } catch (error) {
+        console.error('Error fetching ebook:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     fetchEbook();
   }, [id]);
-
-  const fetchEbook = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/ebooks/${id}`);
-      setEbook(response.data);
-    } catch (error) {
-      console.error('Error fetching ebook:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
