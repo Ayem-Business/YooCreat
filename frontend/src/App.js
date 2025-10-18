@@ -4,11 +4,25 @@ import axios from 'axios';
 import { FaBook, FaSignOutAlt, FaPlus, FaSpinner, FaCheckCircle, FaEye, FaGoogle } from 'react-icons/fa';
 import './App.css';
 
-// Détection automatique de l'environnement
-// En développement: utilise localhost:8001
-// En production (Emergent): utilise l'URL de base (les requêtes /api sont proxiées automatiquement)
-const API_URL = process.env.REACT_APP_BACKEND_URL || 
-  (window.location.hostname === 'localhost' ? 'http://localhost:8001' : '');
+// Configuration API URL intelligente pour dev et production
+// Dev (localhost): http://localhost:8001
+// Prod (Emergent): même domaine, requêtes /api/* proxiées automatiquement
+const getAPIUrl = () => {
+  // Si variable d'environnement explicite, l'utiliser
+  if (process.env.REACT_APP_BACKEND_URL) {
+    return process.env.REACT_APP_BACKEND_URL;
+  }
+  
+  // Sinon, détection automatique
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:8001';
+  }
+  
+  // Production: utiliser le même domaine (proxy Kubernetes)
+  return window.location.origin;
+};
+
+const API_URL = getAPIUrl();
 
 // Configure axios to send cookies with all requests
 axios.defaults.withCredentials = true;
