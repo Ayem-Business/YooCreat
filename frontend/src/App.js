@@ -176,8 +176,10 @@ const AuthPage = () => {
   };
 
   const handleGoogleLogin = () => {
-    // Redirect to Emergent OAuth with redirect back to dashboard
-    const redirectUrl = `${window.location.origin}/dashboard`;
+    // Redirect to Emergent OAuth with redirect back to root
+    // L'utilisateur reviendra sur la page de connexion avec #session_id
+    // qui sera automatiquement traité par AuthProvider
+    const redirectUrl = `${window.location.origin}/`;
     const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
     window.location.href = authUrl;
   };
