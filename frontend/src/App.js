@@ -1103,6 +1103,35 @@ const EbookViewer = () => {
                   </>
                 )}
               </button>
+
+              {/* Bouton Générer Pages Légales */}
+              <button
+                onClick={handleGenerateLegal}
+                disabled={generatingLegal}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 whitespace-nowrap ${
+                  legalGenerated
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                    : 'bg-primary-violet text-white hover:bg-primary-violet-dark'
+                }`}
+                data-testid="generate-legal-button"
+              >
+                {generatingLegal ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    <span>Génération...</span>
+                  </>
+                ) : legalGenerated ? (
+                  <>
+                    <FaCheckCircle />
+                    <span>Pages Légales OK</span>
+                  </>
+                ) : (
+                  <>
+                    <span>⚖️</span>
+                    <span>Générer Pages Légales</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
