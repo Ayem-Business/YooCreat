@@ -21,7 +21,12 @@ app = FastAPI(title="YooCreat API")
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8001"],  # Specific origins instead of "*"
+    allow_origins=[
+        "http://localhost:3000", 
+        "http://localhost:8001",
+        "https://ebook-factory-15.preview.emergentagent.com",
+        "https://*.preview.emergentagent.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
