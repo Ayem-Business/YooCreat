@@ -755,6 +755,115 @@ async def save_toc(ebook_id: str, toc_data: dict, current_user = Depends(get_cur
     
     return {"success": True}
 
+class GenerateLegalPagesRequest(BaseModel):
+    ebook_id: str
+    publisher: Optional[str] = None
+    isbn: Optional[str] = None
+    edition: Optional[str] = "Première édition"
+    year: Optional[int] = None
+
+@app.post("/api/ebooks/generate-legal-pages")
+async def generate_legal_pages(request: GenerateLegalPagesRequest, current_user = Depends(get_current_user)):
+    """Generate legal pages (copyright, mentions légales, ISBN) for the ebook"""
+    try:
+        ebook_id = request.ebook_id
+        # Get ebook
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Determine year
+        year = request.year if request.year else datetime.now(timezone.utc).year
+        publisher = request.publisher if request.publisher else "Édition Indépendante"
+        
+        # Generate legal pages content using AI
+        prompt = f"""Tu es un expert juridique et éditorial spécialisé dans la création de pages légales pour les livres.
+
+INFORMATIONS DU LIVRE :
+- Titre : {ebook['title']}
+- Auteur : {ebook['author']}
+- Éditeur : {publisher}
+- Année : {year}
+- Édition : {request.edition}
+- ISBN : {request.isbn if request.isbn else "À attribuer"}
+
+MISSION : Génère les pages légales complètes et professionnelles pour ce livre en français, incluant :
+
+1. **PAGE DE COPYRIGHT**
+   - Symbole © avec année et nom de l'auteur
+   - Droits de reproduction réservés
+   - Mention d'édition
+   - ISBN (si fourni)
+   - Éditeur
+   - Mention du dépôt légal
+   
+2. **MENTIONS LÉGALES**
+   - Protection de la propriété intellectuelle
+   - Conditions d'utilisation
+   - Avertissement sur la reproduction
+   - Contact de l'éditeur/auteur
+   
+3. **PAGE DE TITRE COMPLÈTE**
+   - Titre du livre
+   - Nom de l'auteur
+   - Éditeur
+   - Année
+
+Format de réponse (JSON) :
+{{
+  "copyright_page": "Texte complet de la page de copyright avec sauts de ligne (\\n)",
+  "legal_mentions": "Texte complet des mentions légales avec sauts de ligne (\\n)",
+  "title_page": "Texte complet de la page de titre avec sauts de ligne (\\n)",
+  "isbn": "{request.isbn if request.isbn else 'Non attribué'}",
+  "publisher": "{publisher}",
+  "year": {year},
+  "edition": "{request.edition}"
+}}
+
+EXIGENCES :
+- Langage : 100% en français
+- Ton : Formel et professionnel
+- Conformité : Respecte les standards français et européens
+- Lisibilité : Structure claire avec paragraphes distincts
+
+Réponds UNIQUEMENT avec le JSON."""
+
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"legal_{ebook_id}_{datetime.now(timezone.utc).timestamp()}",
+            system_message="Tu es un expert juridique et éditorial spécialisé dans les pages légales de livres."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        user_message = UserMessage(text=prompt)
+        response = await chat.send_message(user_message)
+        
+        # Clean and parse response
+        import json
+        clean_response = response.strip()
+        if clean_response.startswith("```json"):
+            clean_response = clean_response[7:]
+        if clean_response.startswith("```"):
+            clean_response = clean_response[3:]
+        if clean_response.endswith("```"):
+            clean_response = clean_response[:-3]
+        clean_response = clean_response.strip()
+        
+        legal_data = json.loads(clean_response)
+        
+        # Save legal pages to ebook
+        ebooks_collection.update_one(
+            {"_id": ebook_id},
+            {"$set": {"legal_pages": legal_data}}
+        )
+        
+        return {
+            "success": True,
+            "legal_pages": legal_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating legal pages: {str(e)}")
+
 # Export Routes
 @app.get("/api/ebooks/{ebook_id}/export/pdf")
 async def export_pdf(ebook_id: str, current_user = Depends(get_current_user)):
