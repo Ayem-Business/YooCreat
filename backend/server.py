@@ -701,6 +701,117 @@ async def save_toc(ebook_id: str, toc_data: dict, current_user = Depends(get_cur
     
     return {"success": True}
 
+# Export Routes
+@app.get("/api/ebooks/{ebook_id}/export/pdf")
+async def export_pdf(ebook_id: str, current_user = Depends(get_current_user)):
+    """Export ebook to PDF format"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        exporter = EbookExporter(ebook)
+        pdf_buffer = exporter.export_to_pdf()
+        
+        filename = f"{ebook['title'].replace(' ', '_')}.pdf"
+        
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting PDF: {str(e)}")
+
+@app.get("/api/ebooks/{ebook_id}/export/epub")
+async def export_epub(ebook_id: str, current_user = Depends(get_current_user)):
+    """Export ebook to EPUB format (e-readers)"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        exporter = EbookExporter(ebook)
+        epub_buffer = exporter.export_to_epub()
+        
+        filename = f"{ebook['title'].replace(' ', '_')}.epub"
+        
+        return StreamingResponse(
+            epub_buffer,
+            media_type="application/epub+zip",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting EPUB: {str(e)}")
+
+@app.get("/api/ebooks/{ebook_id}/export/docx")
+async def export_docx(ebook_id: str, current_user = Depends(get_current_user)):
+    """Export ebook to DOCX format (editable)"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        exporter = EbookExporter(ebook)
+        docx_buffer = exporter.export_to_docx()
+        
+        filename = f"{ebook['title'].replace(' ', '_')}.docx"
+        
+        return StreamingResponse(
+            docx_buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting DOCX: {str(e)}")
+
+@app.get("/api/ebooks/{ebook_id}/export/html")
+async def export_html(ebook_id: str, current_user = Depends(get_current_user)):
+    """Export ebook to HTML format (interactive flipbook)"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        exporter = EbookExporter(ebook)
+        html_buffer = exporter.export_to_html_flipbook()
+        
+        filename = f"{ebook['title'].replace(' ', '_')}_flipbook.html"
+        
+        return StreamingResponse(
+            html_buffer,
+            media_type="text/html",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting HTML: {str(e)}")
+
+@app.get("/api/ebooks/{ebook_id}/export/mobi")
+async def export_mobi(ebook_id: str, current_user = Depends(get_current_user)):
+    """Export ebook to MOBI format (Kindle)"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Note: MOBI requires conversion tool
+        # For now, return EPUB (can be converted to MOBI using Calibre)
+        exporter = EbookExporter(ebook)
+        epub_buffer = exporter.export_to_mobi()
+        
+        filename = f"{ebook['title'].replace(' ', '_')}_for_kindle.epub"
+        
+        return StreamingResponse(
+            epub_buffer,
+            media_type="application/epub+zip",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "X-Note": "Convert this EPUB to MOBI using Calibre or send to Kindle email"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting MOBI: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
