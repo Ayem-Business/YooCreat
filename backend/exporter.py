@@ -300,6 +300,40 @@ class EbookExporter:
         if self.description:
             book.add_metadata('DC', 'description', self.description)
         
+        # Add ISBN if available
+        if self.legal_pages.get('isbn') and self.legal_pages['isbn'] != 'Non attribué':
+            book.add_metadata('DC', 'identifier', self.legal_pages['isbn'], {'id': 'isbn'})
+        
+        # Create legal pages chapter if available
+        epub_chapters = []
+        
+        if self.legal_pages:
+            legal_content = "<h1>Informations Légales</h1>"
+            
+            if self.legal_pages.get('copyright_page'):
+                legal_content += "<div style='text-align: center; margin: 2em 0;'>"
+                copyright_lines = self.legal_pages['copyright_page'].split('\n')
+                for line in copyright_lines:
+                    if line.strip():
+                        legal_content += f"<p>{line.strip()}</p>"
+                legal_content += "</div>"
+            
+            if self.legal_pages.get('legal_mentions'):
+                legal_content += "<h2>Mentions Légales</h2>"
+                legal_lines = self.legal_pages['legal_mentions'].split('\n')
+                for line in legal_lines:
+                    if line.strip():
+                        legal_content += f"<p>{line.strip()}</p>"
+            
+            legal_chapter = epub.EpubHtml(
+                title='Informations Légales',
+                file_name='legal.xhtml',
+                lang='fr'
+            )
+            legal_chapter.content = legal_content
+            book.add_item(legal_chapter)
+            epub_chapters.append(legal_chapter)
+        
         # Create chapters
         epub_chapters = []
         
