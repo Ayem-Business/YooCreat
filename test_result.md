@@ -272,6 +272,173 @@ for chapter in chapters:
 
 ---
 
+## Nouvelle Fonctionnalité : Thèmes Visuels & Illustrations (IA)
+
+### Date: 2025-01-XX - Session 3
+
+**Objectif :** Intégrer la personnalisation visuelle des ebooks avec génération IA et illustrations automatiques.
+
+### 🎨 Fonctionnalités Implémentées
+
+#### 1. ✅ Génération de Thème Visuel par IA
+
+**Nouvel endpoint :** `POST /api/ebooks/generate-visual-theme`
+
+**Contenu généré par IA :**
+- **Palette de couleurs** (3 couleurs HEX)
+  - Primaire : Titres H1/H2, éléments principaux
+  - Secondaire : Citations, encadrés, accents
+  - Arrière-plan : Sections spéciales
+- **Polices de caractères**
+  - Corps : Helvetica, Georgia, Arial, Times, Palatino
+  - Titres : Versions Bold des polices
+- **Style d'encadrés/citations**
+  - Type : Classique (italique + bordure) ou Graphique (encadré coloré)
+  - Icône : Emoji/symbole approprié
+- **Séparateur de chapitre**
+  - Type : Minimaliste ou Décoratif
+  - Symbole : Caractère Unicode/emoji
+
+**Format de réponse :**
+```json
+{
+  "palette": {
+    "primary": "#HEX",
+    "secondary": "#HEX", 
+    "background": "#HEX",
+    "justification": "..."
+  },
+  "fonts": {
+    "body": "Police",
+    "titles": "Police-Bold",
+    "justification": "..."
+  },
+  "quote_style": {...},
+  "chapter_separator": {...},
+  "overall_mood": "..."
+}
+```
+
+#### 2. ✅ Génération d'Illustrations par IA + Unsplash
+
+**Nouvel endpoint :** `POST /api/ebooks/generate-illustrations`
+
+**Processus en 2 étapes :**
+
+**Étape 1 - IA génère les requêtes de recherche :**
+- Analyse chaque chapitre (titre + description)
+- Génère 1-3 requêtes de recherche en anglais
+- Crée descriptions alt accessibles en français
+- Détermine placement stratégique dans le chapitre
+
+**Étape 2 - Récupération d'images :**
+- Utilisation de l'API Unsplash (source.unsplash.com)
+- Images libres de droits
+- URL directes intégrables dans PDF/EPUB
+- Crédit photo automatique
+
+**Format de réponse :**
+```json
+{
+  "chapter_number": 1,
+  "queries": [
+    {
+      "search_query": "meditation",
+      "alt_text": "Une personne en méditation...",
+      "placement": "Après 'Les bases de la pratique'",
+      "image_url": "https://source.unsplash.com/...",
+      "image_credit": "Photo from Unsplash"
+    }
+  ]
+}
+```
+
+#### 3. ✅ Interface Frontend
+
+**Nouveaux boutons ajoutés :**
+- 🎨 **"Générer Thème Visuel"** : Gradient bleu-violet
+- 🖼️ **"Générer Illustrations"** : Gradient rose-orange
+- États : Normal / Génération / OK (checkmark vert)
+- Disabled si contenu pas encore généré (pour illustrations)
+
+**Sections d'affichage :**
+
+**Thème Visuel :**
+- Ambiance générale (mood)
+- Palette avec preview des 3 couleurs
+- Polices avec exemples visuels
+- Style citations avec icône
+- Séparateur chapitre avec symbole
+
+**Illustrations :**
+- Groupées par chapitre
+- Preview image avec fallback
+- Détails : requête, alt text, placement
+- Crédit photo Unsplash
+
+#### 4. ⏳ Application dans les Exports (À Faire)
+
+**PDF :**
+- Appliquer couleurs du thème dans styles
+- Utiliser polices définies
+- Intégrer séparateurs décoratifs
+- Insérer images aux emplacements suggérés
+- Appliquer style citations
+
+**EPUB :**
+- CSS personnalisé avec thème
+- Balises alt pour accessibilité
+- Images intégrées dans XHTML
+- Référence dans OPF
+- Structure sémantique H1/H2/H3 préservée
+
+### Fichiers Modifiés (Session 3)
+
+1. `/app/backend/server.py`
+   - Nouveaux models Pydantic : `GenerateVisualThemeRequest`, `GenerateIllustrationsRequest`
+   - Endpoint `generate-visual-theme` avec prompt IA détaillé
+   - Endpoint `generate-illustrations` avec IA + Unsplash API
+   - Stockage dans MongoDB : `visual_theme`, `illustrations`
+
+2. `/app/frontend/src/App.js`
+   - Nouveaux états : `generatingTheme`, `themeGenerated`, `generatingIllustrations`, `illustrationsGenerated`
+   - Fonctions : `handleGenerateTheme()`, `handleGenerateIllustrations()`
+   - 2 nouveaux boutons avec gradients colorés
+   - Sections d'affichage complètes avec preview
+
+3. `/app/backend/exporter.py` (À modifier prochainement)
+   - Intégration thème dans PDF/EPUB
+   - Insertion images
+   - CSS personnalisé
+
+### Tests Requis
+
+- ⏳ Test backend endpoints (theme + illustrations)
+- ⏳ Test frontend génération et affichage
+- ⏳ Test intégration Unsplash (images valides)
+- ⏳ Test application thème dans exports
+- ⏳ Test accessibilité (alt tags)
+
+### Notes Importantes
+
+**Unsplash API :**
+- Service gratuit utilisé : `source.unsplash.com`
+- Pas de clé API requise pour ce service
+- Alternative : Peut utiliser Unsplash API officielle avec clé
+- Limite : 50 requêtes/heure en gratuit
+
+**Compatibilité :**
+- Polices : Limitées aux standards PDF/EPUB
+- Couleurs : Codes HEX valides uniquement
+- Images : Format JPEG/PNG, optimisées
+- Structure : Sémantique H1/H2/H3 préservée
+
+---
+
+## Status: ✅ Thèmes Visuels Implémentés - Tests Backend/Frontend Requis
+
+---
+
 ## RÉSULTATS DES TESTS FRONTEND E2E (Testing Agent)
 
 ### Date de Test: 2025-01-27 13:51
