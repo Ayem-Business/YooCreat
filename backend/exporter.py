@@ -128,13 +128,76 @@ class EbookExporter:
         
         story.append(PageBreak())
         
-        # Table of contents
+        # Legal pages if available
+        if self.legal_pages:
+            # Copyright page
+            if self.legal_pages.get('copyright_page'):
+                copyright_style = ParagraphStyle(
+                    'Copyright',
+                    parent=styles['Normal'],
+                    fontSize=10,
+                    alignment=TA_CENTER,
+                    spaceAfter=8,
+                    fontName='Helvetica'
+                )
+                copyright_lines = self.legal_pages['copyright_page'].split('\n')
+                for line in copyright_lines:
+                    if line.strip():
+                        story.append(Paragraph(line.strip(), copyright_style))
+                        story.append(Spacer(1, 4))
+                story.append(PageBreak())
+            
+            # Legal mentions
+            if self.legal_pages.get('legal_mentions'):
+                story.append(Paragraph("Mentions Légales", chapter_title_style))
+                story.append(Spacer(1, 0.2*inch))
+                legal_lines = self.legal_pages['legal_mentions'].split('\n')
+                for line in legal_lines:
+                    if line.strip():
+                        story.append(Paragraph(line.strip(), body_style))
+                        story.append(Spacer(1, 6))
+                story.append(PageBreak())
+        
+        # Table of contents (enhanced with subtitles)
         story.append(Paragraph("Table des Matières", chapter_title_style))
         story.append(Spacer(1, 0.3*inch))
         
-        for chapter in self.chapters:
-            toc_entry = f"{chapter['number']}. {chapter['title']}"
-            story.append(Paragraph(toc_entry, body_style))
+        toc_style = ParagraphStyle(
+            'TOCEntry',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=8,
+            fontName='Helvetica-Bold'
+        )
+        
+        toc_subtitle_style = ParagraphStyle(
+            'TOCSubtitle',
+            parent=styles['Normal'],
+            fontSize=9,
+            textColor=colors.HexColor('#6B7280'),
+            spaceAfter=4,
+            leftIndent=20,
+            fontName='Helvetica'
+        )
+        
+        for idx, chapter in enumerate(self.chapters):
+            # Main chapter entry
+            chapter_type = chapter.get('type', 'chapter')
+            if chapter_type == 'introduction':
+                toc_entry = f"Introduction"
+            elif chapter_type == 'conclusion':
+                toc_entry = f"Conclusion"
+            else:
+                toc_entry = f"Chapitre {chapter['number']} : {chapter['title']}"
+            
+            story.append(Paragraph(toc_entry, toc_style))
+            
+            # Add subtitles if available from TOC data
+            if self.toc and idx < len(self.toc):
+                subtitles = self.toc[idx].get('subtitles', [])
+                for subtitle in subtitles:
+                    story.append(Paragraph(f"• {subtitle}", toc_subtitle_style))
+            
             story.append(Spacer(1, 6))
         
         story.append(PageBreak())
