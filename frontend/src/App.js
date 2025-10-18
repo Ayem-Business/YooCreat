@@ -790,9 +790,6 @@ const EbookViewer = () => {
   );
 };
 
-// Import useParams for EbookViewer
-import { useParams } from 'react-router-dom';
-
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { token, loading } = useAuth();
