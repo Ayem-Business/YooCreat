@@ -793,6 +793,8 @@ const EbookViewer = () => {
   const [exporting, setExporting] = useState(false);
   const [generatingCover, setGeneratingCover] = useState(false);
   const [coverGenerated, setCoverGenerated] = useState(false);
+  const [generatingLegal, setGeneratingLegal] = useState(false);
+  const [legalGenerated, setLegalGenerated] = useState(false);
 
   useEffect(() => {
     const fetchEbook = async () => {
