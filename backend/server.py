@@ -307,37 +307,55 @@ async def logout(response: Response, session_token: Optional[str] = Cookie(None)
 @app.post("/api/ebooks/generate-toc")
 async def generate_toc(data: GenerateTOC, current_user = Depends(get_current_user)):
     try:
-        # Create prompt for TOC generation
-        prompt = f"""Tu es un expert en création de livres et structuration de contenu.
+        # Create enhanced prompt for TOC generation
+        prompt = f"""Tu es un expert en création de livres et structuration de contenu littéraire professionnel.
 
-Génère une table des matières détaillée pour un ebook avec les caractéristiques suivantes :
+CONTEXTE DU LIVRE :
+- Titre : {data.title}
+- Auteur : {data.author}
+- Ton : {data.tone}
+- Public cible : {', '.join(data.target_audience)}
+- Description/Objectif : {data.description}
+- Nombre de chapitres : {data.chapters_count}
+- Longueur : {data.length}
 
-Titre : {data.title}
-Auteur : {data.author}
-Ton : {data.tone}
-Public cible : {', '.join(data.target_audience)}
-Description : {data.description}
-Nombre de chapitres : {data.chapters_count}
-Longueur approximative : {data.length}
+MISSION :
+Crée une structure de livre COHÉRENTE et PROFESSIONNELLE avec :
+1. Une INTRODUCTION captivante (chapitre 0)
+2. {data.chapters_count} chapitres de contenu principal (numérotés 1 à {data.chapters_count})
+3. Une CONCLUSION percutante (dernier chapitre)
 
-Crée une table des matières structurée avec exactement {data.chapters_count} chapitres.
-Chaque chapitre doit avoir :
-- Un numéro (1, 2, 3...)
-- Un titre accrocheur et pertinent
-- Une brève description (2-3 phrases) de ce qui sera couvert
+EXIGENCES pour chaque élément :
+- Numéro : 0 pour intro, 1-{data.chapters_count} pour chapitres, {data.chapters_count + 1} pour conclusion
+- Titre : Accrocheur, pertinent, adapté au ton {data.tone}
+- Description : 2-3 phrases décrivant le contenu et la progression logique
+- Assure une PROGRESSION NATURELLE d'un chapitre à l'autre
+- Intègre des TRANSITIONS conceptuelles entre chapitres
 
-Réponds UNIQUEMENT avec un JSON valide dans ce format exact :
+Réponds UNIQUEMENT avec ce JSON valide (sans markdown, sans texte avant/après) :
 {{
   "chapters": [
     {{
+      "number": 0,
+      "title": "Introduction",
+      "description": "Accroche le lecteur, présente le sujet et annonce les bénéfices",
+      "type": "introduction"
+    }},
+    {{
       "number": 1,
-      "title": "Titre du chapitre",
-      "description": "Description du contenu du chapitre"
+      "title": "Premier chapitre...",
+      "description": "Description détaillée...",
+      "type": "chapter"
+    }},
+    ...
+    {{
+      "number": {data.chapters_count + 1},
+      "title": "Conclusion",
+      "description": "Synthèse, call-to-action et ouverture",
+      "type": "conclusion"
     }}
   ]
-}}
-
-Réponds UNIQUEMENT avec le JSON, sans texte avant ou après."""
+}}"""
 
         # Initialize LLM Chat
         chat = LlmChat(
