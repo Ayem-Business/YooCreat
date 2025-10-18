@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API URL</title>
+</head>
+<body>
+    <h1>Test API Detection</h1>
+    <div id="result"></div>
+    <button onclick="testAPI()">Test Register API</button>
+    
+    <script>
+        // Same logic as App.js
+        const API_URL = '' || 
+          (window.location.hostname === 'localhost' ? 'http://localhost:8001' : '');
+        
+        document.getElementById('result').innerHTML = `
+            <p><strong>Hostname:</strong> ${window.location.hostname}</p>
+            <p><strong>API_URL:</strong> "${API_URL}"</p>
+            <p><strong>Full URL:</strong> ${API_URL}/api/auth/register</p>
+        `;
+        
+        async function testAPI() {
+            try {
+                const url = `${API_URL}/api/auth/register`;
+                console.log('Calling:', url);
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        username: 'TestHTML',
+                        email: 'testhtml@example.com',
+                        password: 'Test123'
+                    })
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').innerHTML += `
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Response:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML += `
+                    <p style="color: red;"><strong>Error:</strong> ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
