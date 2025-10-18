@@ -220,22 +220,58 @@ class EbookExporter:
             
             for para in paragraphs:
                 if para.strip():
-                    # Check if it's a subtitle (starts with ##)
-                    if para.strip().startswith('##'):
-                        subtitle = para.strip().replace('##', '').strip()
+                    # Check if it's a section with 🔹 marker
+                    if para.strip().startswith('🔹'):
+                        subtitle = para.strip().replace('🔹', '').strip()
                         subtitle_style = ParagraphStyle(
                             'SubtitleStyle',
                             parent=styles['Heading2'],
                             fontSize=14,
-                            textColor=colors.HexColor('#1E40AF'),
+                            textColor=colors.HexColor('#8B5CF6'),
                             spaceAfter=10,
                             spaceBefore=15,
                             fontName='Helvetica-Bold'
                         )
                         story.append(Paragraph(subtitle, subtitle_style))
+                    # Fallback: still handle ## format if present (for backward compatibility)
+                    elif para.strip().startswith('##'):
+                        subtitle = para.strip().replace('##', '').strip().replace('#', '').strip()
+                        subtitle_style = ParagraphStyle(
+                            'SubtitleStyle',
+                            parent=styles['Heading2'],
+                            fontSize=14,
+                            textColor=colors.HexColor('#8B5CF6'),
+                            spaceAfter=10,
+                            spaceBefore=15,
+                            fontName='Helvetica-Bold'
+                        )
+                        story.append(Paragraph(subtitle, subtitle_style))
+                    # Remove any stray # symbols at the start
+                    elif para.strip().startswith('#'):
+                        clean_text = para.strip().lstrip('#').strip()
+                        # If it looks like a heading, treat it as subtitle
+                        if len(clean_text) < 100 and not '. ' in clean_text[:20]:
+                            subtitle_style = ParagraphStyle(
+                                'SubtitleStyle',
+                                parent=styles['Heading2'],
+                                fontSize=14,
+                                textColor=colors.HexColor('#8B5CF6'),
+                                spaceAfter=10,
+                                spaceBefore=15,
+                                fontName='Helvetica-Bold'
+                            )
+                            story.append(Paragraph(clean_text, subtitle_style))
+                        else:
+                            # Regular paragraph
+                            clean_para = clean_text.replace('\n', ' ')
+                            story.append(Paragraph(clean_para, body_style))
+                            story.append(Spacer(1, 6))
                     else:
-                        # Clean and add paragraph
+                        # Clean and add paragraph - remove any stray markdown symbols
                         clean_para = para.strip().replace('\n', ' ')
+                        # Remove markdown bold/italic markers if present
+                        clean_para = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_para)
+                        clean_para = re.sub(r'\*(.*?)\*', r'<i>\1</i>', clean_para)
                         story.append(Paragraph(clean_para, body_style))
                         story.append(Spacer(1, 6))
             
