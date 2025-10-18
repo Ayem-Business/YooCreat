@@ -552,10 +552,14 @@ Réponds UNIQUEMENT avec le contenu du chapitre (sans répéter le titre princip
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating content: {str(e)}")
 
+class GenerateCoverRequest(BaseModel):
+    ebook_id: str
+
 @app.post("/api/ebooks/generate-cover")
-async def generate_cover(ebook_id: str, current_user = Depends(get_current_user)):
+async def generate_cover(request: GenerateCoverRequest, current_user = Depends(get_current_user)):
     """Generate a text-based cover page design"""
     try:
+        ebook_id = request.ebook_id
         # Get ebook
         ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
         if not ebook:
