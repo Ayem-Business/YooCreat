@@ -818,10 +818,14 @@ const EbookViewer = () => {
   const handleExport = async (format) => {
     setExporting(true);
     try {
+      // Récupérer le token pour l'authentification
+      const token = localStorage.getItem('token');
+      
       const response = await axios.get(
         `${API_URL}/api/ebooks/${id}/export/${format}`,
         {
           responseType: 'blob',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
           withCredentials: true
         }
       );
@@ -835,11 +839,15 @@ const EbookViewer = () => {
         docx: 'docx'
       };
 
+      // Créer un nom de fichier sûr
+      const safeFilename = ebook?.title ? ebook.title.replace(/[^a-z0-9]/gi, '_') : 'ebook';
+      const filename = `${safeFilename}.${extensions[format]}`;
+
       // Créer un lien de téléchargement
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${ebook.title.replace(/[^a-z0-9]/gi, '_')}.${extensions[format]}`);
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -848,7 +856,11 @@ const EbookViewer = () => {
       setShowExportMenu(false);
     } catch (error) {
       console.error('Error exporting:', error);
-      alert('Erreur lors de l\'export. Veuillez réessayer.');
+      if (error.response?.status === 401) {
+        alert('Session expirée. Veuillez vous reconnecter.');
+      } else {
+        alert(`Erreur lors de l'export: ${error.response?.data?.detail || error.message}`);
+      }
     } finally {
       setExporting(false);
     }
