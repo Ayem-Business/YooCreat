@@ -353,11 +353,26 @@ class EbookExporter:
             
             for para in paragraphs:
                 if para.strip():
-                    if para.strip().startswith('##'):
-                        subtitle = para.strip().replace('##', '').strip()
+                    # Handle 🔹 sections
+                    if para.strip().startswith('🔹'):
+                        subtitle = para.strip().replace('🔹', '').strip()
                         content += f"<h2>{subtitle}</h2>"
+                    # Fallback for ## format
+                    elif para.strip().startswith('##'):
+                        subtitle = para.strip().replace('##', '').strip().replace('#', '').strip()
+                        content += f"<h2>{subtitle}</h2>"
+                    # Clean stray # symbols
+                    elif para.strip().startswith('#'):
+                        clean_text = para.strip().lstrip('#').strip()
+                        if len(clean_text) < 100 and not '. ' in clean_text[:20]:
+                            content += f"<h2>{clean_text}</h2>"
+                        else:
+                            content += f"<p>{clean_text}</p>"
                     else:
                         clean_para = para.strip().replace('\n', ' ')
+                        # Convert markdown bold/italic to HTML
+                        clean_para = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', clean_para)
+                        clean_para = re.sub(r'\*(.*?)\*', r'<em>\1</em>', clean_para)
                         content += f"<p>{clean_para}</p>"
             
             # Create EPUB chapter
