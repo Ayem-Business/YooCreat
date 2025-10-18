@@ -277,8 +277,6 @@ async def google_auth(auth_data: GoogleAuth, response: Response):
         raise HTTPException(status_code=500, detail=f"Error connecting to auth service: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Authentication error: {str(e)}")
-        }
-    }
 
 @app.get("/api/auth/me")
 async def get_me(current_user = Depends(get_current_user)):
