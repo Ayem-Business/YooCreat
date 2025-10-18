@@ -4,7 +4,11 @@ import axios from 'axios';
 import { FaBook, FaSignOutAlt, FaPlus, FaSpinner, FaCheckCircle, FaEye, FaGoogle } from 'react-icons/fa';
 import './App.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+// Détection automatique de l'environnement
+// En développement: utilise localhost:8001
+// En production (Emergent): utilise l'URL de base (les requêtes /api sont proxiées automatiquement)
+const API_URL = process.env.REACT_APP_BACKEND_URL || 
+  (window.location.hostname === 'localhost' ? 'http://localhost:8001' : '');
 
 // Configure axios to send cookies with all requests
 axios.defaults.withCredentials = true;
