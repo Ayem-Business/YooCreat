@@ -1,9 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, Response, Request, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from pymongo import MongoClient
@@ -11,6 +11,7 @@ from bson import ObjectId
 import os
 from dotenv import load_dotenv
 import asyncio
+import httpx
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 load_dotenv()
