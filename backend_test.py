@@ -34,7 +34,7 @@ class YooCreatAPITester:
         
         # Generate unique test user
         timestamp = str(int(datetime.now().timestamp()))
-        test_email = f"testuser_{timestamp}@yoocreat.test"
+        test_email = f"testuser_{timestamp}@example.com"
         test_username = f"testuser_{timestamp}"
         test_password = "TestPassword123!"
         
