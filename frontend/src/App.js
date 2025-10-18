@@ -1205,6 +1205,62 @@ const EbookViewer = () => {
           </div>
         )}
 
+        {/* Affichage des pages légales générées */}
+        {ebook.legal_pages && (
+          <div className="card mb-6" data-testid="legal-display">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">⚖️ Pages Légales</h2>
+            
+            <div className="space-y-6">
+              {/* Copyright */}
+              {ebook.legal_pages.copyright_page && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-bold text-gray-700 mb-3 flex items-center">
+                    <span className="mr-2">©</span>
+                    Copyright
+                  </h3>
+                  <div className="text-gray-600 text-sm whitespace-pre-wrap">
+                    {ebook.legal_pages.copyright_page}
+                  </div>
+                </div>
+              )}
+
+              {/* Legal Mentions */}
+              {ebook.legal_pages.legal_mentions && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-bold text-gray-700 mb-3">Mentions Légales</h3>
+                  <div className="text-gray-600 text-sm whitespace-pre-wrap">
+                    {ebook.legal_pages.legal_mentions}
+                  </div>
+                </div>
+              )}
+
+              {/* ISBN & Edition Info */}
+              <div className="grid md:grid-cols-3 gap-4">
+                {ebook.legal_pages.isbn && ebook.legal_pages.isbn !== 'Non attribué' && (
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <h3 className="font-bold text-blue-700 mb-2">ISBN</h3>
+                    <p className="text-blue-600 text-sm">{ebook.legal_pages.isbn}</p>
+                  </div>
+                )}
+                
+                {ebook.legal_pages.publisher && (
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <h3 className="font-bold text-purple-700 mb-2">Éditeur</h3>
+                    <p className="text-purple-600 text-sm">{ebook.legal_pages.publisher}</p>
+                  </div>
+                )}
+                
+                {ebook.legal_pages.edition && (
+                  <div className="p-4 bg-orange-50 rounded-lg">
+                    <h3 className="font-bold text-orange-700 mb-2">Édition</h3>
+                    <p className="text-orange-600 text-sm">{ebook.legal_pages.edition} - {ebook.legal_pages.year}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Contenu des chapitres */}
         {ebook.chapters && ebook.chapters.length > 0 ? (
           <div className="space-y-6">
