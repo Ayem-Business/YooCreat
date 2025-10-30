@@ -1267,11 +1267,11 @@ const EbookViewer = () => {
           withCredentials: true
         });
         setEbook(ebookResponse.data);
-        alert('Image uploadée avec succès !');
+        showToast('Image uploadée avec succès !', 'success');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
     } finally {
       setUploadingImage(null);
     }
