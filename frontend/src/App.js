@@ -1668,6 +1668,71 @@ const EbookViewer = () => {
                 )}
               </button>
 
+              {/* Bouton Générer Image Couverture DALL-E */}
+              <button
+                onClick={handleGenerateCoverImage}
+                disabled={generatingCoverImage}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 whitespace-nowrap ${
+                  coverImageGenerated
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                    : 'bg-gradient-to-r from-indigo-500 to-pink-500 text-white hover:from-indigo-600 hover:to-pink-600'
+                }`}
+              >
+                {generatingCoverImage ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    <span>Génération...</span>
+                  </>
+                ) : coverImageGenerated ? (
+                  <>
+                    <FaCheckCircle />
+                    <span>Image Couverture OK</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🖼️</span>
+                    <span>Générer Image Couverture</span>
+                  </>
+                )}
+              </button>
+
+              {/* Bouton Upload Image Couverture */}
+              <label className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer ${
+                uploadingCoverImage
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-600 hover:to-cyan-600'
+              }`}>
+                {uploadingCoverImage ? (
+                  <>
+                    <FaSpinner className="animate-spin" />
+                    <span>Upload...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>📤</span>
+                    <span>Upload Image Couverture</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleUploadCoverImage}
+                  className="hidden"
+                  disabled={uploadingCoverImage}
+                />
+              </label>
+
+              {/* Bouton Éditer Mentions Légales */}
+              {legalGenerated && (
+                <button
+                  onClick={handleEditLegal}
+                  className="px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 whitespace-nowrap bg-gray-600 text-white hover:bg-gray-700"
+                >
+                  <span>✏️</span>
+                  <span>Éditer Mentions Légales</span>
+                </button>
+              )}
+
               {/* Bouton Générer Thème Visuel */}
               <button
                 onClick={handleGenerateTheme}
