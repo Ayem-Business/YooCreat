@@ -412,8 +412,13 @@ const EbookCreator = () => {
     target_audience: [],
     description: '',
     chapters_count: 5,
-    length: 'Moyen: 20-50 pages'
+    length: 'Moyen: 20-50 pages',
+    genre: 'Guide pratique',
+    about_author: '',
+    acknowledgments: '',
+    preface: ''
   });
+  const [formStep, setFormStep] = useState(1); // Sub-step for form (1 or 2)
   const [toc, setToc] = useState([]);
   const [ebookId, setEbookId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -423,6 +428,7 @@ const EbookCreator = () => {
 
   const tones = ['Professionnel', 'Conversationnel', 'Académique', 'Humoristique', 'Inspirant', 'Technique', 'Storytelling'];
   const audiences = ['Enfants', 'Adolescents', 'Adultes', 'Professionnels', 'Seniors', 'Débutants', 'Experts'];
+  const genres = ['Roman', 'Essai', 'Guide pratique', 'Autobiographie', 'Poésie', 'Manuel', 'Développement personnel', 'Business', 'Science', 'Autre'];
   const lengths = ['Court: 5-10 pages', 'Moyen: 20-50 pages', 'Long: 50-100 pages', 'Très long: 100+ pages'];
 
   const handleAudienceToggle = (audience) => {
