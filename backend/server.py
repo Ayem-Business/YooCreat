@@ -1162,6 +1162,297 @@ Réponds UNIQUEMENT avec le JSON."""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating illustrations: {str(e)}")
 
+@app.post("/api/ebooks/edit-chapter")
+async def edit_chapter(request: EditChapterRequest, current_user = Depends(get_current_user)):
+    """Edit chapter content manually"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": request.ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        chapters = ebook.get('chapters', [])
+        chapter_found = False
+        
+        for chapter in chapters:
+            if chapter.get('number') == request.chapter_number:
+                chapter['content'] = request.new_content
+                chapter['edited_at'] = datetime.now(timezone.utc).isoformat()
+                chapter_found = True
+                break
+        
+        if not chapter_found:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+        
+        # Update ebook
+        ebooks_collection.update_one(
+            {"_id": request.ebook_id},
+            {"$set": {"chapters": chapters}}
+        )
+        
+        return {
+            "success": True,
+            "message": "Chapter updated successfully"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error editing chapter: {str(e)}")
+
+@app.post("/api/ebooks/regenerate-chapter")
+async def regenerate_chapter(request: RegenerateChapterRequest, current_user = Depends(get_current_user)):
+    """Regenerate a specific chapter using AI"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": request.ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        chapters = ebook.get('chapters', [])
+        chapter_to_regen = None
+        chapter_index = -1
+        
+        for idx, chapter in enumerate(chapters):
+            if chapter.get('number') == request.chapter_number:
+                chapter_to_regen = chapter
+                chapter_index = idx
+                break
+        
+        if not chapter_to_regen:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+        
+        # Regenerate content using same logic as original generation
+        chapter_type = chapter_to_regen.get('type', 'chapter')
+        
+        if chapter_type == 'chapter':
+            prompt = f"""Tu es un auteur professionnel expert en pédagogie et storytelling.
+
+CONTEXTE DU LIVRE :
+- Titre : "{ebook['title']}"
+- Auteur : {ebook['author']}
+- Ton : {ebook['tone']}
+- Public cible : {', '.join(ebook['target_audience'])}
+- Objectif global : {ebook['description']}
+
+CHAPITRE À RÉGÉNÉRER :
+Numéro : {chapter_to_regen['number']}
+Titre : {chapter_to_regen['title']}
+Objectif : {chapter_to_regen.get('description', 'Développer ce thème')}
+
+MISSION : Rédige un chapitre COMPLET et ENGAGEANT (1200-1800 mots) structuré ainsi :
+
+1. **OUVERTURE** (2-3 paragraphes)
+   - Accroche puissante
+   - Annonce claire du contenu
+
+2. **DÉVELOPPEMENT EN SECTIONS** (corps principal)
+   - 2-4 sections claires avec titre "🔹 Titre"
+   - Explications approfondies
+   - 2-3 exemples concrets par section
+   - Anecdotes illustratives
+
+3. **EN SYNTHÈSE** (section finale OBLIGATOIRE)
+   "🔹 En synthèse"
+   - Résumé des 3-4 points clés
+   - Principal enseignement
+
+4. **RÉFLEXION PERSONNELLE** (section finale OBLIGATOIRE)
+   "🔹 Question de réflexion"
+   - 1-2 questions ouvertes
+
+EXIGENCES STRICTES :
+- Style : {ebook['tone']}
+- ⚠️ INTERDIT : N'utilise JAMAIS #, ##, ### 
+- ⚠️ INTERDIT : Ne répète JAMAIS le titre du chapitre
+- Format : "🔹 Titre" pour sous-sections
+- Langage : 100% français
+
+Réponds UNIQUEMENT avec le contenu."""
+
+        else:
+            # For introduction or conclusion, use appropriate prompt
+            prompt = f"""Régénère le contenu pour ce type de chapitre: {chapter_type}"""
+        
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"regen_{request.ebook_id}_{request.chapter_number}_{datetime.now(timezone.utc).timestamp()}",
+            system_message="Tu es un auteur professionnel."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        user_message = UserMessage(text=prompt)
+        new_content = await chat.send_message(user_message)
+        
+        # Update chapter
+        chapters[chapter_index]['content'] = new_content.strip()
+        chapters[chapter_index]['regenerated_at'] = datetime.now(timezone.utc).isoformat()
+        
+        ebooks_collection.update_one(
+            {"_id": request.ebook_id},
+            {"$set": {"chapters": chapters}}
+        )
+        
+        return {
+            "success": True,
+            "new_content": new_content.strip()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error regenerating chapter: {str(e)}")
+
+@app.post("/api/ebooks/regenerate-image")
+async def regenerate_image(request: RegenerateImageRequest, current_user = Depends(get_current_user)):
+    """Regenerate a specific illustration using DALL-E"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": request.ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        illustrations = ebook.get('illustrations', [])
+        
+        # Find the chapter illustration
+        chapter_illust = None
+        for illust in illustrations:
+            if illust.get('chapter_number') == request.chapter_number:
+                chapter_illust = illust
+                break
+        
+        if not chapter_illust:
+            raise HTTPException(status_code=404, detail="Illustrations for this chapter not found")
+        
+        images = chapter_illust.get('images', [])
+        if request.illustration_index >= len(images):
+            raise HTTPException(status_code=404, detail="Illustration index out of range")
+        
+        image_item = images[request.illustration_index]
+        dalle_prompt = image_item.get('dalle_prompt', '')
+        
+        # Regenerate with DALL-E
+        image_gen = OpenAIImageGeneration(api_key=EMERGENT_LLM_KEY)
+        
+        generated_images = await image_gen.generate_images(
+            prompt=dalle_prompt,
+            model="gpt-image-1",
+            number_of_images=1
+        )
+        
+        if generated_images and len(generated_images) > 0:
+            # Convert to base64
+            image_base64 = base64.b64encode(generated_images[0]).decode('utf-8')
+            
+            # Store in GridFS
+            image_id = fs.put(
+                generated_images[0],
+                filename=f"ebook_{request.ebook_id}_ch{request.chapter_number}_regen_{datetime.now(timezone.utc).timestamp()}.png",
+                content_type="image/png",
+                metadata={
+                    "ebook_id": request.ebook_id,
+                    "chapter_number": request.chapter_number,
+                    "dalle_prompt": dalle_prompt,
+                    "regenerated_at": datetime.now(timezone.utc).isoformat()
+                }
+            )
+            
+            # Update image item
+            image_item['image_base64'] = image_base64
+            image_item['image_id'] = str(image_id)
+            image_item['regenerated_at'] = datetime.now(timezone.utc).isoformat()
+            
+            # Save back to database
+            ebooks_collection.update_one(
+                {"_id": request.ebook_id},
+                {"$set": {"illustrations": illustrations}}
+            )
+            
+            return {
+                "success": True,
+                "image_base64": image_base64
+            }
+        else:
+            raise HTTPException(status_code=500, detail="No image was generated")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error regenerating image: {str(e)}")
+
+@app.post("/api/ebooks/upload-custom-image")
+async def upload_custom_image(
+    ebook_id: str,
+    chapter_number: int,
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user)
+):
+    """Upload a custom image for a chapter"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Invalid file type. Only JPG, PNG, WebP allowed")
+        
+        # Read file
+        image_data = await file.read()
+        
+        # Store in GridFS
+        image_id = fs.put(
+            image_data,
+            filename=file.filename,
+            content_type=file.content_type,
+            metadata={
+                "ebook_id": ebook_id,
+                "chapter_number": chapter_number,
+                "uploaded_by": current_user["_id"],
+                "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                "source": "user_upload"
+            }
+        )
+        
+        # Convert to base64 for frontend
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        
+        # Add to illustrations array
+        illustrations = ebook.get('illustrations', [])
+        
+        # Find or create chapter illustrations entry
+        chapter_found = False
+        for illust in illustrations:
+            if illust.get('chapter_number') == chapter_number:
+                if 'images' not in illust:
+                    illust['images'] = []
+                illust['images'].append({
+                    'image_base64': image_base64,
+                    'image_id': str(image_id),
+                    'image_source': 'user_upload',
+                    'alt_text': f"Image personnalisée pour le chapitre {chapter_number}",
+                    'placement': "Personnalisée par l'utilisateur"
+                })
+                chapter_found = True
+                break
+        
+        if not chapter_found:
+            illustrations.append({
+                'chapter_number': chapter_number,
+                'images': [{
+                    'image_base64': image_base64,
+                    'image_id': str(image_id),
+                    'image_source': 'user_upload',
+                    'alt_text': f"Image personnalisée pour le chapitre {chapter_number}",
+                    'placement': "Personnalisée par l'utilisateur"
+                }]
+            })
+        
+        ebooks_collection.update_one(
+            {"_id": ebook_id},
+            {"$set": {"illustrations": illustrations}}
+        )
+        
+        return {
+            "success": True,
+            "image_base64": image_base64,
+            "image_id": str(image_id)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
+
 # Export Routes
 @app.get("/api/ebooks/{ebook_id}/export/pdf")
 async def export_pdf(ebook_id: str, current_user = Depends(get_current_user)):
