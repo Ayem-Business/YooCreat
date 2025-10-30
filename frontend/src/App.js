@@ -895,6 +895,17 @@ const EbookCreator = () => {
           </div>
         )}
 
+        {/* Progress Bar for Content Generation */}
+        {generatingContent && contentProgress > 0 && (
+          <div className="mt-6">
+            <ProgressBar 
+              progress={contentProgress}
+              message={progressMessage}
+              details={progressDetails}
+            />
+          </div>
+        )}
+
         {/* Step 3: Generated Content */}
         {step === 3 && (
           <div className="card">
