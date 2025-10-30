@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, status, Response, Request, Cookie
+from fastapi import FastAPI, HTTPException, Depends, status, Response, Request, Cookie, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import StreamingResponse
@@ -9,11 +9,14 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from pymongo import MongoClient
 from bson import ObjectId
+import gridfs
 import os
 from dotenv import load_dotenv
 import asyncio
 import httpx
+import base64
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from emergentintegrations.llm.openai.image_generation import OpenAIImageGeneration
 from exporter import EbookExporter
 
 load_dotenv()
