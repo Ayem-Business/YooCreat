@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FaBook, FaSignOutAlt, FaPlus, FaSpinner, FaCheckCircle, FaEye, FaGoogle } from 'react-icons/fa';
 import './App.css';
 import { ToastProvider, useToast } from './ToastContext';
+import ProgressBar from './ProgressBar';
 
 // Configuration API URL intelligente pour dev et production
 // Dev (localhost): http://localhost:8001
