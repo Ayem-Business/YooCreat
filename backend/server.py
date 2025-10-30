@@ -875,6 +875,128 @@ async def upload_cover_image(
 @app.post("/api/ebooks/create")
 async def create_ebook(ebook_data: EbookCreate, current_user = Depends(get_current_user)):
     ebook_id = f"ebook_{datetime.utcnow().timestamp()}".replace(".", "_")
+    
+    # Enrich preface, acknowledgments, about_author with AI if provided
+    enriched_preface = ebook_data.preface
+    enriched_acknowledgments = ebook_data.acknowledgments
+    enriched_about_author = ebook_data.about_author
+    
+    # Enrich preface with AI
+    if ebook_data.preface and len(ebook_data.preface) > 10:
+        try:
+            preface_prompt = f"""Tu es un écrivain professionnel spécialisé dans la rédaction de préfaces.
+
+CONTEXTE DU LIVRE :
+- Titre : {ebook_data.title}
+- Auteur : {ebook_data.author}
+- Genre : {ebook_data.genre}
+- Description : {ebook_data.description}
+- Ton : {ebook_data.tone}
+
+PRÉFACE FOURNIE PAR L'AUTEUR (à enrichir) :
+{ebook_data.preface}
+
+MISSION : Enrichis cette préface en te mettant à la place de l'auteur. Ajoute :
+1. Une introduction captivante
+2. Le contexte et la motivation derrière l'écriture du livre
+3. Ce que le lecteur peut attendre
+4. Une connexion émotionnelle avec le sujet
+5. Une conclusion qui donne envie de lire
+
+Reste fidèle à l'esprit original mais rends-le plus professionnel, engageant et littéraire.
+Longueur : 300-500 mots.
+Style : {ebook_data.tone}
+Langage : 100% français
+
+Réponds UNIQUEMENT avec le texte enrichi de la préface."""
+
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"preface_{ebook_id}",
+                system_message="Tu es un écrivain professionnel."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            response = await chat.send_message(UserMessage(text=preface_prompt))
+            enriched_preface = response.strip()
+        except Exception as e:
+            print(f"Error enriching preface: {e}")
+            # Keep original if error
+    
+    # Enrich acknowledgments with AI
+    if ebook_data.acknowledgments and len(ebook_data.acknowledgments) > 10:
+        try:
+            ack_prompt = f"""Tu es un écrivain professionnel spécialisé dans les remerciements.
+
+CONTEXTE DU LIVRE :
+- Titre : {ebook_data.title}
+- Auteur : {ebook_data.author}
+
+REMERCIEMENTS FOURNIS PAR L'AUTEUR (à enrichir) :
+{ebook_data.acknowledgments}
+
+MISSION : Enrichis ces remerciements en te mettant à la place de l'auteur. Ajoute :
+1. Une introduction chaleureuse
+2. Des détails émotionnels sur l'importance des personnes mentionnées
+3. Une gratitude profonde et sincère
+4. Des anecdotes ou moments partagés si pertinent
+5. Une conclusion touchante
+
+Reste fidèle aux personnes mentionnées mais rends-le plus professionnel et émouvant.
+Longueur : 200-400 mots.
+Ton : Chaleureux, sincère, professionnel
+Langage : 100% français
+
+Réponds UNIQUEMENT avec le texte enrichi des remerciements."""
+
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"ack_{ebook_id}",
+                system_message="Tu es un écrivain professionnel."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            response = await chat.send_message(UserMessage(text=ack_prompt))
+            enriched_acknowledgments = response.strip()
+        except Exception as e:
+            print(f"Error enriching acknowledgments: {e}")
+    
+    # Enrich about_author with AI
+    if ebook_data.about_author and len(ebook_data.about_author) > 10:
+        try:
+            author_prompt = f"""Tu es un rédacteur professionnel spécialisé dans les biographies d'auteurs.
+
+CONTEXTE :
+- Nom de l'auteur : {ebook_data.author}
+- Livre : {ebook_data.title}
+- Genre : {ebook_data.genre}
+
+BIOGRAPHIE FOURNIE (à enrichir) :
+{ebook_data.about_author}
+
+MISSION : Enrichis cette biographie de l'auteur. Ajoute :
+1. Une introduction professionnelle
+2. Son parcours et expertise
+3. Ses réalisations pertinentes au sujet du livre
+4. Ce qui le rend qualifié pour écrire ce livre
+5. Une touche personnelle qui humanise l'auteur
+
+Reste fidèle aux faits fournis mais rends-le plus professionnel, crédible et engageant.
+Longueur : 150-250 mots.
+Style : Professionnel, à la 3ème personne
+Langage : 100% français
+
+Réponds UNIQUEMENT avec le texte enrichi "À propos de l'auteur"."""
+
+            chat = LlmChat(
+                api_key=EMERGENT_LLM_KEY,
+                session_id=f"author_{ebook_id}",
+                system_message="Tu es un rédacteur professionnel."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            response = await chat.send_message(UserMessage(text=author_prompt))
+            enriched_about_author = response.strip()
+        except Exception as e:
+            print(f"Error enriching about_author: {e}")
+    
     ebook = {
         "_id": ebook_id,
         "user_id": current_user["_id"],
