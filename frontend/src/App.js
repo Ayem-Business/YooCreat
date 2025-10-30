@@ -1802,6 +1802,20 @@ const EbookViewer = () => {
           <div className="card mb-6" data-testid="cover-display">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">📐 Design de Couverture</h2>
             
+            {/* Display generated cover image if available */}
+            {ebook.cover.cover_image_base64 && (
+              <div className="mb-6">
+                <h3 className="font-bold text-gray-700 mb-3">🖼️ Image de Couverture</h3>
+                <div className="flex justify-center">
+                  <img 
+                    src={`data:image/png;base64,${ebook.cover.cover_image_base64}`}
+                    alt="Couverture du livre"
+                    className="max-w-md rounded-lg shadow-2xl"
+                  />
+                </div>
+              </div>
+            )}
+            
             <div className="grid md:grid-cols-2 gap-6">
               {/* Visuel de la couverture */}
               <div 
