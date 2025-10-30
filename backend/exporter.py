@@ -537,11 +537,39 @@ class EbookExporter:
                     else:
                         # Clean and add paragraph - regular paragraph
                         clean_para = para.strip().replace('\n', ' ')
-                        # Remove markdown bold/italic markers if present
+                        # Convert markdown bold/italic to HTML
                         clean_para = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', clean_para)
                         clean_para = re.sub(r'\*(.*?)\*', r'<i>\1</i>', clean_para)
                         story.append(Paragraph(clean_para, body_style))
                         story.append(Spacer(1, 6))
+                        regular_para_count += 1
+                        
+                        # Insert images after 2nd regular paragraph
+                        if regular_para_count == 2 and not images_inserted and chapter_illustrations and chapter_illustrations.get('images'):
+                            story.append(Spacer(1, 0.3*inch))
+                            for img_data in chapter_illustrations['images']:
+                                if img_data.get('image_base64'):
+                                    try:
+                                        image_bytes = base64.b64decode(img_data['image_base64'])
+                                        image_buffer = BytesIO(image_bytes)
+                                        img = Image(image_buffer, width=5*inch, height=3*inch)
+                                        story.append(img)
+                                        if img_data.get('alt_text'):
+                                            caption_style = ParagraphStyle(
+                                                'Caption',
+                                                parent=styles['Normal'],
+                                                fontSize=9,
+                                                textColor=colors.HexColor('#6B7280'),
+                                                alignment=TA_CENTER,
+                                                spaceAfter=12,
+                                                fontName='Helvetica-Oblique'
+                                            )
+                                            story.append(Spacer(1, 0.1*inch))
+                                            story.append(Paragraph(img_data['alt_text'], caption_style))
+                                        story.append(Spacer(1, 0.2*inch))
+                                    except Exception as e:
+                                        print(f"Error adding image: {e}")
+                            images_inserted = True
             
             # Add illustrations for this chapter if available
             chapter_illustrations = None
