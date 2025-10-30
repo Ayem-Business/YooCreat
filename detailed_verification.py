@@ -8,7 +8,7 @@ import json
 import asyncio
 from datetime import datetime
 
-BACKEND_URL = "https://smart-ebook-gen-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://smartwriter-2.preview.emergentagent.com/api"
 
 async def detailed_verification():
     """Perform detailed verification of the new features"""

@@ -12,7 +12,7 @@ from datetime import datetime
 import re
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://smart-ebook-gen-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://smartwriter-2.preview.emergentagent.com/api"
 
 class YooCreatAPITester:
     def __init__(self):

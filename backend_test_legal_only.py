@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://smart-ebook-gen-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://smartwriter-2.preview.emergentagent.com/api"
 
 class YooCreatLegalTester:
     def __init__(self):
