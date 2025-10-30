@@ -224,6 +224,39 @@ class EbookExporter:
                         story.append(Spacer(1, 6))
                 story.append(PageBreak())
         
+        # Preface if available
+        if self.preface:
+            story.append(Paragraph("Préface", chapter_title_style))
+            story.append(Spacer(1, 0.3*inch))
+            preface_lines = self.preface.split('\n')
+            for line in preface_lines:
+                if line.strip():
+                    story.append(Paragraph(line.strip(), body_style))
+                    story.append(Spacer(1, 6))
+            story.append(PageBreak())
+        
+        # Acknowledgments if available
+        if self.acknowledgments:
+            story.append(Paragraph("Remerciements", chapter_title_style))
+            story.append(Spacer(1, 0.3*inch))
+            ack_lines = self.acknowledgments.split('\n')
+            for line in ack_lines:
+                if line.strip():
+                    story.append(Paragraph(line.strip(), body_style))
+                    story.append(Spacer(1, 6))
+            story.append(PageBreak())
+        
+        # About author if available
+        if self.about_author:
+            story.append(Paragraph("À propos de l'auteur", chapter_title_style))
+            story.append(Spacer(1, 0.3*inch))
+            author_lines = self.about_author.split('\n')
+            for line in author_lines:
+                if line.strip():
+                    story.append(Paragraph(line.strip(), body_style))
+                    story.append(Spacer(1, 6))
+            story.append(PageBreak())
+        
         # Table of contents (enhanced with page numbers estimation)
         story.append(Paragraph("Table des Matières", chapter_title_style))
         story.append(Spacer(1, 0.3*inch))
