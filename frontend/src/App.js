@@ -2015,37 +2015,39 @@ const ProtectedRoute = ({ children }) => {
 // Main App Component
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<AuthPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/create"
-            element={
-              <ProtectedRoute>
-                <EbookCreator />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ebook/:id"
-            element={
-              <ProtectedRoute>
-                <EbookViewer />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<AuthPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create"
+              element={
+                <ProtectedRoute>
+                  <EbookCreator />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ebook/:id"
+              element={
+                <ProtectedRoute>
+                  <EbookViewer />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 
