@@ -428,6 +428,12 @@ const EbookCreator = () => {
   const [generatingContent, setGeneratingContent] = useState(false);
   const [generatedChapters, setGeneratedChapters] = useState([]);
   const [error, setError] = useState('');
+  
+  // Progress tracking
+  const [tocProgress, setTocProgress] = useState(0);
+  const [contentProgress, setContentProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
+  const [progressDetails, setProgressDetails] = useState('');
 
   const tones = ['Professionnel', 'Conversationnel', 'Académique', 'Humoristique', 'Inspirant', 'Technique', 'Storytelling'];
   const audiences = ['Enfants', 'Adolescents', 'Adultes', 'Professionnels', 'Seniors', 'Débutants', 'Experts'];
