@@ -1014,7 +1014,7 @@ Réponds UNIQUEMENT avec le JSON."""
 
 @app.post("/api/ebooks/generate-illustrations")
 async def generate_illustrations(request: GenerateIllustrationsRequest, current_user = Depends(get_current_user)):
-    """Generate illustration suggestions for each chapter using AI and Unsplash API"""
+    """Generate illustrations for each chapter using AI and DALL-E (OpenAI)"""
     try:
         ebook_id = request.ebook_id
         # Get ebook
@@ -1026,60 +1026,67 @@ async def generate_illustrations(request: GenerateIllustrationsRequest, current_
         if not chapters:
             raise HTTPException(status_code=400, detail="Generate content first before illustrations")
         
-        # Generate illustration queries for each chapter using AI
+        # Initialize DALL-E image generator
+        image_gen = OpenAIImageGeneration(api_key=EMERGENT_LLM_KEY)
+        
+        # Generate illustrations for each chapter using AI
         illustrations_data = []
         
         for chapter in chapters:
             chapter_num = chapter.get('number', 0)
             chapter_title = chapter.get('title', '')
             chapter_desc = chapter.get('description', '')
+            chapter_content = chapter.get('content', '')[:500]  # First 500 chars for context
             chapter_type = chapter.get('type', 'chapter')
             
             # Skip for introduction/conclusion or limit to regular chapters
             if chapter_type not in ['chapter']:
                 continue
             
-            # AI generates search queries for Unsplash
-            prompt = f"""Tu es un expert en recherche d'images et illustration de livres.
+            # AI generates image prompts for DALL-E
+            prompt = f"""Tu es un expert en génération de prompts pour DALL-E (génération d'images IA).
 
 CHAPITRE À ILLUSTRER :
 - Numéro : {chapter_num}
 - Titre : {chapter_title}
 - Description : {chapter_desc}
-- Livre : {ebook['title']} ({ebook['tone']})
+- Extrait : {chapter_content[:200]}...
+- Livre : {ebook['title']} (Ton: {ebook['tone']})
 
-MISSION : Génère 1-3 requêtes de recherche d'images pour ce chapitre qui soient :
-1. **Pertinentes** au contenu du chapitre
-2. **Génériques** pour trouver des photos libres de droits (évite les termes trop spécifiques)
-3. **Visuellement attrayantes** (nature, objets, concepts abstraits, personnes en action)
-4. En **anglais** (pour Unsplash API)
+MISSION : Génère 1-2 prompts DALL-E en ANGLAIS pour créer des illustrations qui :
+1. **Reflètent visuellement** le contenu et l'émotion du chapitre
+2. **Sont artistiques** et esthétiquement agréables (style photo réaliste, illustration digitale, art conceptuel)
+3. **Conviennent à un ebook** (pas de texte dans l'image, composition équilibrée)
+4. **Restent appropriées** au ton {ebook['tone']} et au public cible
 
-Pour chaque requête, génère aussi une description ALT en français pour l'accessibilité.
+Pour chaque prompt, fournis aussi une description ALT en français pour l'accessibilité.
 
 Format de réponse (JSON strict) :
 {{
   "chapter_number": {chapter_num},
-  "queries": [
+  "images": [
     {{
-      "search_query": "mot-clé en anglais (ex: meditation, healthy food, workspace)",
-      "alt_text": "Description accessible en français (ex: Une personne en méditation dans un cadre paisible)",
-      "placement": "Après quel H2 ou section (ex: Après 'Les bases de la pratique')"
+      "dalle_prompt": "Detailed English prompt for DALL-E (ex: A serene landscape showing meditation in nature, soft lighting, peaceful atmosphere, digital art style)",
+      "alt_text": "Description accessible en français (ex: Paysage serein montrant une personne en méditation dans la nature)",
+      "placement": "Suggestion de placement (ex: Au début du chapitre, Après la section principale)"
     }}
   ]
 }}
 
-CONTRAINTES :
-- Maximum 3 requêtes par chapitre
-- Mots-clés simples et génériques en anglais
-- Alt text descriptif et accessible en français
-- Placement stratégique dans le chapitre
+CONTRAINTES CRITIQUES :
+- Maximum 2 images par chapitre (DALL-E est coûteux)
+- Prompts en ANGLAIS, détaillés et descriptifs (50-100 mots)
+- Alt text en FRANÇAIS, accessible
+- Style cohérent avec le thème du livre
+- PAS de texte/mots dans les images générées
+- Mentionner le style artistique souhaité (photo, illustration, art digital, etc.)
 
 Réponds UNIQUEMENT avec le JSON."""
 
             chat = LlmChat(
                 api_key=EMERGENT_LLM_KEY,
                 session_id=f"illust_{ebook_id}_{chapter_num}_{datetime.now(timezone.utc).timestamp()}",
-                system_message="Tu es un expert en recherche d'images et illustration de contenu."
+                system_message="Tu es un expert en génération de prompts pour DALL-E et illustration de contenu."
             ).with_model("openai", "gpt-4o-mini")
             
             user_message = UserMessage(text=prompt)
@@ -1098,34 +1105,46 @@ Réponds UNIQUEMENT avec le JSON."""
             
             chapter_illust = json.loads(clean_response)
             
-            # Fetch images from Unsplash API for each query
-            async with httpx.AsyncClient() as client:
-                for query_item in chapter_illust.get('queries', []):
-                    search_query = query_item.get('search_query', '')
+            # Generate images with DALL-E for each prompt
+            for image_item in chapter_illust.get('images', []):
+                dalle_prompt = image_item.get('dalle_prompt', '')
+                
+                try:
+                    # Generate image with DALL-E
+                    images = await image_gen.generate_images(
+                        prompt=dalle_prompt,
+                        model="gpt-image-1",  # Latest model
+                        number_of_images=1
+                    )
                     
-                    # Unsplash API (using demo/public access)
-                    # Note: For production, use env variable for API key
-                    unsplash_url = f"https://api.unsplash.com/photos/random"
-                    params = {
-                        "query": search_query,
-                        "orientation": "landscape",
-                        "count": 1
-                    }
-                    headers = {
-                        "Authorization": "Client-ID YOUR_UNSPLASH_ACCESS_KEY"  # Will need to be env variable
-                    }
-                    
-                    try:
-                        # For now, use a fallback approach with placeholder
-                        # In production, use actual Unsplash API key from environment
+                    if images and len(images) > 0:
+                        # Convert image bytes to base64
+                        image_base64 = base64.b64encode(images[0]).decode('utf-8')
                         
-                        # Placeholder: generate a description-based approach
-                        query_item['image_url'] = f"https://source.unsplash.com/800x600/?{search_query.replace(' ', ',')}"
-                        query_item['image_credit'] = "Photo from Unsplash"
+                        # Store image in GridFS
+                        image_id = fs.put(
+                            images[0],
+                            filename=f"ebook_{ebook_id}_ch{chapter_num}_{datetime.now(timezone.utc).timestamp()}.png",
+                            content_type="image/png",
+                            metadata={
+                                "ebook_id": ebook_id,
+                                "chapter_number": chapter_num,
+                                "dalle_prompt": dalle_prompt,
+                                "generated_at": datetime.now(timezone.utc).isoformat()
+                            }
+                        )
                         
-                    except Exception as img_error:
-                        print(f"Error fetching image: {img_error}")
-                        query_item['image_url'] = None
+                        # Add to image item
+                        image_item['image_base64'] = image_base64
+                        image_item['image_id'] = str(image_id)
+                        image_item['image_source'] = 'dall-e'
+                        
+                    else:
+                        image_item['error'] = "No image was generated"
+                        
+                except Exception as img_error:
+                    print(f"Error generating DALL-E image: {img_error}")
+                    image_item['error'] = str(img_error)
             
             illustrations_data.append(chapter_illust)
         
