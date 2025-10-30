@@ -71,7 +71,7 @@ const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('OAuth error:', error);
-          alert('Erreur lors de la connexion avec Google. Veuillez réessayer.');
+          showToast('Erreur lors de la connexion avec Google. Veuillez réessayer.', 'error');
         } finally {
           setLoading(false);
           setProcessingOAuth(false);
