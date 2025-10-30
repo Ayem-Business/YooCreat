@@ -994,6 +994,16 @@ const EbookViewer = () => {
   const [regeneratingChapter, setRegeneratingChapter] = useState(null);
   const [regeneratingImage, setRegeneratingImage] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(null);
+  
+  // Cover image states
+  const [generatingCoverImage, setGeneratingCoverImage] = useState(false);
+  const [coverImageGenerated, setCoverImageGenerated] = useState(false);
+  const [uploadingCoverImage, setUploadingCoverImage] = useState(false);
+  
+  // Legal editing states
+  const [editingLegal, setEditingLegal] = useState(false);
+  const [editedCopyright, setEditedCopyright] = useState('');
+  const [editedLegalMentions, setEditedLegalMentions] = useState('');
 
   useEffect(() => {
     const fetchEbook = async () => {
