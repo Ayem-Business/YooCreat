@@ -458,20 +458,36 @@ const EbookCreator = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    setTocProgress(0);
+    setProgressMessage('Génération de la table des matières');
 
     try {
       // Create ebook first
+      setTocProgress(20);
+      setProgressDetails('Création de l\'ebook...');
       const createResponse = await axios.post(`${API_URL}/api/ebooks/create`, formData);
       setEbookId(createResponse.data.ebook_id);
 
       // Generate TOC
+      setTocProgress(50);
+      setProgressDetails('Analyse du sujet et génération de la structure...');
       const tocResponse = await axios.post(`${API_URL}/api/ebooks/generate-toc`, formData);
+      
+      setTocProgress(90);
+      setProgressDetails('Finalisation...');
       setToc(tocResponse.data.toc);
+      
+      setTocProgress(100);
+      setProgressDetails('Table des matières générée avec succès !');
+      
+      // Small delay to show 100%
+      await new Promise(resolve => setTimeout(resolve, 500));
       setStep(2);
     } catch (err) {
       setError(err.response?.data?.detail || 'Erreur lors de la génération de la table des matières');
     } finally {
       setLoading(false);
+      setTocProgress(0);
     }
   };
 
