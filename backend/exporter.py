@@ -140,59 +140,80 @@ class EbookExporter:
         # Build document
         story = []
         
-        # Enhanced Cover Page with design
-        story.append(Spacer(1, 1.5*inch))
-        
-        # Add design elements if available
-        if self.cover.get('design'):
-            # Add a colored banner effect using a table
-            cover_colors = self.cover['design'].get('colors', ['#3B82F6', '#8B5CF6', '#F97316'])
-            
-            # Try to parse colors
+        # Enhanced Cover Page with ACTUAL IMAGE if available
+        if self.cover.get('cover_image_base64'):
             try:
-                color1 = colors.HexColor(cover_colors[0]) if len(cover_colors) > 0 else colors.HexColor('#3B82F6')
-                color2 = colors.HexColor(cover_colors[1]) if len(cover_colors) > 1 else colors.HexColor('#8B5CF6')
-            except:
-                color1 = colors.HexColor('#3B82F6')
-                color2 = colors.HexColor('#8B5CF6')
+                # Use the generated cover image
+                image_bytes = base64.b64decode(self.cover['cover_image_base64'])
+                image_buffer = BytesIO(image_bytes)
+                
+                # Create full-page cover image
+                cover_img = Image(image_buffer, width=6*inch, height=8*inch)
+                story.append(Spacer(1, 0.5*inch))
+                story.append(cover_img)
+                story.append(PageBreak())
+            except Exception as e:
+                print(f"Error adding cover image: {e}")
+                # Fallback to text cover
+                story.append(Spacer(1, 2*inch))
+                story.append(Paragraph(self.title, title_style))
+                story.append(Spacer(1, 0.5*inch))
+                story.append(Paragraph(f"par {self.author}", author_style))
+                story.append(PageBreak())
+        else:
+            # Text-based cover page
+            story.append(Spacer(1, 1.5*inch))
             
-            # Color bar at top
-            color_bar = Table([['']], colWidths=[6*inch])
-            color_bar.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), color1),
-                ('LINEBELOW', (0, 0), (-1, -1), 4, color2),
-            ]))
-            story.append(color_bar)
-            story.append(Spacer(1, 0.5*inch))
-        
-        story.append(Paragraph(self.title, title_style))
-        story.append(Spacer(1, 0.3*inch))
-        story.append(Paragraph(f"par {self.author}", author_style))
-        
-        # Add tagline if exists
-        if self.cover.get('tagline'):
-            story.append(Spacer(1, 0.8*inch))
-            story.append(Paragraph(self.cover['tagline'], subtitle_style))
-        
-        # Add back cover text preview if exists
-        if self.cover.get('back_cover_text'):
-            back_text_style = ParagraphStyle(
-                'BackText',
-                parent=styles['Normal'],
-                fontSize=10,
-                textColor=colors.HexColor('#4B5563'),
-                alignment=TA_CENTER,
-                spaceAfter=12,
-                fontName='Helvetica-Oblique'
-            )
-            story.append(Spacer(1, 1*inch))
-            # Truncate if too long
-            back_text = self.cover['back_cover_text']
-            if len(back_text) > 200:
-                back_text = back_text[:200] + "..."
-            story.append(Paragraph(back_text, back_text_style))
-        
-        story.append(PageBreak())
+            # Add design elements if available
+            if self.cover.get('design'):
+                # Add a colored banner effect using a table
+                cover_colors = self.cover['design'].get('colors', ['#3B82F6', '#8B5CF6', '#F97316'])
+                
+                # Try to parse colors
+                try:
+                    color1 = colors.HexColor(cover_colors[0]) if len(cover_colors) > 0 else colors.HexColor('#3B82F6')
+                    color2 = colors.HexColor(cover_colors[1]) if len(cover_colors) > 1 else colors.HexColor('#8B5CF6')
+                except:
+                    color1 = colors.HexColor('#3B82F6')
+                    color2 = colors.HexColor('#8B5CF6')
+                
+                # Color bar at top
+                color_bar = Table([['']], colWidths=[6*inch])
+                color_bar.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), color1),
+                    ('LINEBELOW', (0, 0), (-1, -1), 4, color2),
+                ]))
+                story.append(color_bar)
+                story.append(Spacer(1, 0.5*inch))
+            
+            story.append(Paragraph(self.title, title_style))
+            story.append(Spacer(1, 0.3*inch))
+            story.append(Paragraph(f"par {self.author}", author_style))
+            
+            # Add tagline if exists
+            if self.cover.get('tagline'):
+                story.append(Spacer(1, 0.8*inch))
+                story.append(Paragraph(self.cover['tagline'], subtitle_style))
+            
+            # Add back cover text preview if exists
+            if self.cover.get('back_cover_text'):
+                back_text_style = ParagraphStyle(
+                    'BackText',
+                    parent=styles['Normal'],
+                    fontSize=10,
+                    textColor=colors.HexColor('#4B5563'),
+                    alignment=TA_CENTER,
+                    spaceAfter=12,
+                    fontName='Helvetica-Oblique'
+                )
+                story.append(Spacer(1, 1*inch))
+                # Truncate if too long
+                back_text = self.cover['back_cover_text']
+                if len(back_text) > 200:
+                    back_text = back_text[:200] + "..."
+                story.append(Paragraph(back_text, back_text_style))
+            
+            story.append(PageBreak())
         
         # Legal pages if available
         if self.legal_pages:
