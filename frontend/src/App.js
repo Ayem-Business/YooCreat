@@ -32,6 +32,7 @@ axios.defaults.withCredentials = true;
 const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
+  const { showToast } = useToast();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
