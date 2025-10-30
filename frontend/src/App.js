@@ -1834,15 +1834,146 @@ const EbookViewer = () => {
           <div className="space-y-6">
             {ebook.chapters.map((chapter, index) => (
               <div key={index} className="card" data-testid={`chapter-${index}`}>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="bg-primary-violet text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">
-                    {chapter.number}
+                {/* Chapter Header with Actions */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-primary-violet text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                      {chapter.number}
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800">{chapter.title}</h2>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-800">{chapter.title}</h2>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEditChapter(chapter)}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center space-x-2"
+                      title="Éditer le chapitre"
+                    >
+                      <span>✏️</span>
+                      <span>Éditer</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => handleRegenerateChapter(chapter.number)}
+                      disabled={regeneratingChapter === chapter.number}
+                      className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 flex items-center space-x-2 disabled:opacity-50"
+                      title="Régénérer le texte avec IA"
+                    >
+                      {regeneratingChapter === chapter.number ? (
+                        <>
+                          <FaSpinner className="animate-spin" />
+                          <span>Régénération...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🔄</span>
+                          <span>Régénérer</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 whitespace-pre-wrap">{chapter.content}</p>
-                </div>
+                
+                {/* Chapter Content or Edit Mode */}
+                {editingChapter === chapter.number ? (
+                  <div className="space-y-4">
+                    <textarea
+                      className="w-full input-field"
+                      rows="15"
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                    ></textarea>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleSaveEdit}
+                        className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+                      >
+                        💾 Enregistrer
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingChapter(null);
+                          setEditedContent('');
+                        }}
+                        className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="prose max-w-none">
+                    <p className="text-gray-700 whitespace-pre-wrap">{chapter.content}</p>
+                  </div>
+                )}
+                
+                {/* Chapter Illustrations */}
+                {ebook.illustrations && ebook.illustrations.find(ill => ill.chapter_number === chapter.number) && (
+                  <div className="mt-6 border-t pt-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">🖼️ Illustrations</h3>
+                    <div className="space-y-4">
+                      {ebook.illustrations
+                        .find(ill => ill.chapter_number === chapter.number)
+                        ?.images?.map((img, imgIdx) => (
+                          <div key={imgIdx} className="bg-gray-50 p-4 rounded-lg">
+                            {/* Image Display */}
+                            {img.image_base64 && (
+                              <img
+                                src={`data:image/png;base64,${img.image_base64}`}
+                                alt={img.alt_text || 'Illustration'}
+                                className="w-full max-w-2xl mx-auto rounded-lg shadow-md mb-3"
+                              />
+                            )}
+                            
+                            {/* Image Info */}
+                            <p className="text-sm text-gray-600 mb-2">
+                              <strong>Description :</strong> {img.alt_text}
+                            </p>
+                            {img.dalle_prompt && (
+                              <p className="text-xs text-gray-500 italic mb-3">
+                                Prompt DALL-E : {img.dalle_prompt}
+                              </p>
+                            )}
+                            
+                            {/* Image Actions */}
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleRegenerateImage(chapter.number, imgIdx)}
+                                disabled={regeneratingImage === `${chapter.number}-${imgIdx}`}
+                                className="px-3 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm disabled:opacity-50"
+                              >
+                                {regeneratingImage === `${chapter.number}-${imgIdx}` ? (
+                                  <><FaSpinner className="animate-spin inline mr-1" /> Régénération...</>
+                                ) : (
+                                  '🔄 Régénérer Image'
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    
+                    {/* Upload Custom Image Button */}
+                    <div className="mt-4">
+                      <label className="cursor-pointer inline-block px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                        {uploadingImage === chapter.number ? (
+                          <><FaSpinner className="animate-spin inline mr-2" /> Upload en cours...</>
+                        ) : (
+                          <>📸 Ajouter une image personnalisée</>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(e) => handleUploadImage(chapter.number, e)}
+                          className="hidden"
+                          disabled={uploadingImage === chapter.number}
+                        />
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">Formats acceptés : JPG, PNG, WebP</p>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
