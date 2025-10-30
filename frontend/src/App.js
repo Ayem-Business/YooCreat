@@ -1358,6 +1358,118 @@ const EbookViewer = () => {
     }
   };
 
+  // Generate cover image with DALL-E
+  const handleGenerateCoverImage = async () => {
+    setGeneratingCoverImage(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/generate-cover-image`,
+        { ebook_id: id },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Update ebook with cover image
+        setEbook({ 
+          ...ebook, 
+          cover: { 
+            ...ebook.cover, 
+            cover_image_base64: response.data.cover_image_base64 
+          } 
+        });
+        setCoverImageGenerated(true);
+        showToast('Image de couverture générée avec succès !', 'success');
+      }
+    } catch (error) {
+      console.error('Error generating cover image:', error);
+      showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
+    } finally {
+      setGeneratingCoverImage(false);
+    }
+  };
+
+  // Upload custom cover image
+  const handleUploadCoverImage = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadingCoverImage(true);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/upload-cover-image?ebook_id=${id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Refresh ebook data
+        const ebookResponse = await axios.get(`${API_URL}/api/ebooks/${id}`, {
+          withCredentials: true
+        });
+        setEbook(ebookResponse.data);
+        showToast('Image de couverture uploadée avec succès !', 'success');
+      }
+    } catch (error) {
+      console.error('Error uploading cover image:', error);
+      showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
+    } finally {
+      setUploadingCoverImage(false);
+    }
+  };
+
+  // Edit legal pages
+  const handleEditLegal = () => {
+    setEditingLegal(true);
+    setEditedCopyright(ebook.legal_pages?.copyright_page || '');
+    setEditedLegalMentions(ebook.legal_pages?.legal_mentions || '');
+  };
+
+  const handleSaveLegal = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/update-legal-pages`,
+        {
+          ebook_id: id,
+          copyright_page: editedCopyright,
+          legal_mentions: editedLegalMentions
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Update local state
+        setEbook({ 
+          ...ebook, 
+          legal_pages: {
+            ...ebook.legal_pages,
+            copyright_page: editedCopyright,
+            legal_mentions: editedLegalMentions
+          }
+        });
+        setEditingLegal(false);
+        showToast('Mentions légales mises à jour avec succès !', 'success');
+      }
+    } catch (error) {
+      console.error('Error updating legal pages:', error);
+      showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
