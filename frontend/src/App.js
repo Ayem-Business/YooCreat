@@ -1158,11 +1158,11 @@ const EbookViewer = () => {
         setEbook({ ...ebook, chapters: updatedChapters });
         setEditingChapter(null);
         setEditedContent('');
-        alert('Chapitre mis à jour avec succès !');
+        showToast('Chapitre mis à jour avec succès !', 'success');
       }
     } catch (error) {
       console.error('Error editing chapter:', error);
-      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
     }
   };
 
