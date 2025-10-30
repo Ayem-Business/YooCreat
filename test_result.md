@@ -4,6 +4,33 @@
 
 ---
 
+
+## URGENT BUG FIX - Legal Mentions Save Button (2025-01-XX)
+
+**Bug Report:**
+- Error: "[object Object],[object Object],[object Object],[object Object]" when saving legal mentions
+- Endpoint: `/api/ebooks/update-legal-pages`
+- Issue: Backend expected individual parameters but frontend sent JSON body
+
+**Root Cause:**
+FastAPI endpoint signature was:
+```python
+async def update_legal_pages(ebook_id: str, copyright_page: str, legal_mentions: str, ...)
+```
+But frontend sent:
+```javascript
+{ ebook_id: id, copyright_page: editedCopyright, legal_mentions: editedLegalMentions }
+```
+
+**Solution Applied:**
+1. Created new Pydantic model `UpdateLegalPagesRequest`
+2. Updated endpoint to use the model: `async def update_legal_pages(request: UpdateLegalPagesRequest, ...)`
+3. Changed all parameter references from `ebook_id` to `request.ebook_id`, etc.
+
+**Status:** ✅ Fixed - Ready for testing
+
+---
+
 ## YAML TEST STRUCTURE
 
 ```yaml
