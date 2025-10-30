@@ -914,6 +914,13 @@ const EbookViewer = () => {
   const [themeGenerated, setThemeGenerated] = useState(false);
   const [generatingIllustrations, setGeneratingIllustrations] = useState(false);
   const [illustrationsGenerated, setIllustrationsGenerated] = useState(false);
+  
+  // Edit & Regenerate states
+  const [editingChapter, setEditingChapter] = useState(null);
+  const [editedContent, setEditedContent] = useState('');
+  const [regeneratingChapter, setRegeneratingChapter] = useState(null);
+  const [regeneratingImage, setRegeneratingImage] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(null);
 
   useEffect(() => {
     const fetchEbook = async () => {
