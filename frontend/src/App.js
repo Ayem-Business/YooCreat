@@ -494,23 +494,48 @@ const EbookCreator = () => {
   const handleGenerateContent = async () => {
     setError('');
     setGeneratingContent(true);
+    setContentProgress(0);
+    setProgressMessage('Génération du contenu');
 
     try {
       // Save TOC first
+      setContentProgress(10);
+      setProgressDetails('Sauvegarde de la structure...');
       await axios.post(`${API_URL}/api/ebooks/${ebookId}/save-toc`, { toc });
 
+      // Calculate progress increment per chapter
+      const totalChapters = toc.length;
+      const progressPerChapter = 80 / totalChapters; // 80% for content, 10% start, 10% end
+
       // Generate content
+      setContentProgress(20);
+      setProgressDetails(`Génération du contenu (0/${totalChapters} chapitres)...`);
+      
       const response = await axios.post(`${API_URL}/api/ebooks/generate-content`, {
         ebook_id: ebookId,
         toc: toc
       });
 
+      // Simulate progress updates (since backend doesn't send progress)
+      for (let i = 1; i <= totalChapters; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const currentProgress = 20 + (i * progressPerChapter);
+        setContentProgress(Math.min(90, currentProgress));
+        setProgressDetails(`Génération du contenu (${i}/${totalChapters} chapitres)...`);
+      }
+
+      setContentProgress(100);
+      setProgressDetails('Contenu généré avec succès !');
       setGeneratedChapters(response.data.chapters);
+      
+      // Small delay to show 100%
+      await new Promise(resolve => setTimeout(resolve, 500));
       setStep(3);
     } catch (err) {
       setError(err.response?.data?.detail || 'Erreur lors de la génération du contenu');
     } finally {
       setGeneratingContent(false);
+      setContentProgress(0);
     }
   };
 
