@@ -571,48 +571,6 @@ class EbookExporter:
                                         print(f"Error adding image: {e}")
                             images_inserted = True
             
-            # Add illustrations for this chapter if available
-            chapter_illustrations = None
-            for illust in self.illustrations:
-                if illust.get('chapter_number') == chapter.get('number'):
-                    chapter_illustrations = illust
-                    break
-            
-            if chapter_illustrations and chapter_illustrations.get('images'):
-                story.append(Spacer(1, 0.3*inch))
-                
-                for img_data in chapter_illustrations['images']:
-                    if img_data.get('image_base64'):
-                        try:
-                            # Decode base64 image
-                            image_bytes = base64.b64decode(img_data['image_base64'])
-                            image_buffer = BytesIO(image_bytes)
-                            
-                            # Create Image object (max width 5 inches)
-                            img = Image(image_buffer, width=5*inch, height=3*inch)
-                            story.append(Spacer(1, 0.2*inch))
-                            story.append(img)
-                            
-                            # Add caption/alt text
-                            if img_data.get('alt_text'):
-                                caption_style = ParagraphStyle(
-                                    'Caption',
-                                    parent=styles['Normal'],
-                                    fontSize=9,
-                                    textColor=colors.HexColor('#6B7280'),
-                                    alignment=TA_CENTER,
-                                    spaceAfter=12,
-                                    fontName='Helvetica-Oblique'
-                                )
-                                story.append(Spacer(1, 0.1*inch))
-                                story.append(Paragraph(img_data['alt_text'], caption_style))
-                            
-                            story.append(Spacer(1, 0.2*inch))
-                        except Exception as e:
-                            print(f"Error adding image to PDF: {e}")
-                            # Continue without the image
-                            pass
-            
             story.append(PageBreak())
         
         # Build PDF with page numbers
