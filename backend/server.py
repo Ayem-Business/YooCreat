@@ -120,6 +120,11 @@ class RegenerateImageRequest(BaseModel):
     chapter_number: int
     illustration_index: int
 
+class UpdateLegalPagesRequest(BaseModel):
+    ebook_id: str
+    copyright_page: str
+    legal_mentions: str
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
