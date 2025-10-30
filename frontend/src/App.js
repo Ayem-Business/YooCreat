@@ -1127,6 +1127,154 @@ const EbookViewer = () => {
     }
   };
 
+  // Edit chapter
+  const handleEditChapter = (chapter) => {
+    setEditingChapter(chapter.number);
+    setEditedContent(chapter.content);
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/edit-chapter`,
+        {
+          ebook_id: id,
+          chapter_number: editingChapter,
+          new_content: editedContent
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Update local state
+        const updatedChapters = ebook.chapters.map(ch =>
+          ch.number === editingChapter ? { ...ch, content: editedContent } : ch
+        );
+        setEbook({ ...ebook, chapters: updatedChapters });
+        setEditingChapter(null);
+        setEditedContent('');
+        alert('Chapitre mis à jour avec succès !');
+      }
+    } catch (error) {
+      console.error('Error editing chapter:', error);
+      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
+  // Regenerate chapter
+  const handleRegenerateChapter = async (chapterNumber) => {
+    setRegeneratingChapter(chapterNumber);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/regenerate-chapter`,
+        {
+          ebook_id: id,
+          chapter_number: chapterNumber
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Update local state
+        const updatedChapters = ebook.chapters.map(ch =>
+          ch.number === chapterNumber ? { ...ch, content: response.data.new_content } : ch
+        );
+        setEbook({ ...ebook, chapters: updatedChapters });
+        alert('Chapitre régénéré avec succès !');
+      }
+    } catch (error) {
+      console.error('Error regenerating chapter:', error);
+      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setRegeneratingChapter(null);
+    }
+  };
+
+  // Regenerate image
+  const handleRegenerateImage = async (chapterNumber, imageIndex) => {
+    setRegeneratingImage(`${chapterNumber}-${imageIndex}`);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/regenerate-image`,
+        {
+          ebook_id: id,
+          chapter_number: chapterNumber,
+          illustration_index: imageIndex
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Update local state with new image
+        const updatedIllustrations = ebook.illustrations.map(ill => {
+          if (ill.chapter_number === chapterNumber) {
+            const updatedImages = [...ill.images];
+            updatedImages[imageIndex] = {
+              ...updatedImages[imageIndex],
+              image_base64: response.data.image_base64
+            };
+            return { ...ill, images: updatedImages };
+          }
+          return ill;
+        });
+        setEbook({ ...ebook, illustrations: updatedIllustrations });
+        alert('Image régénérée avec succès !');
+      }
+    } catch (error) {
+      console.error('Error regenerating image:', error);
+      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setRegeneratingImage(null);
+    }
+  };
+
+  // Upload custom image
+  const handleUploadImage = async (chapterNumber, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploadingImage(chapterNumber);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/ebooks/upload-custom-image?ebook_id=${id}&chapter_number=${chapterNumber}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          withCredentials: true
+        }
+      );
+
+      if (response.data.success) {
+        // Refresh ebook data
+        const ebookResponse = await axios.get(`${API_URL}/api/ebooks/${id}`, {
+          withCredentials: true
+        });
+        setEbook(ebookResponse.data);
+        alert('Image uploadée avec succès !');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setUploadingImage(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
