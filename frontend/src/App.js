@@ -2112,6 +2112,56 @@ const EbookViewer = () => {
           </div>
         )}
 
+        {/* Modal d'édition des mentions légales */}
+        {editingLegal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">✏️ Éditer les Mentions Légales</h2>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="label">Copyright</label>
+                    <textarea
+                      className="w-full input-field"
+                      rows="8"
+                      value={editedCopyright}
+                      onChange={(e) => setEditedCopyright(e.target.value)}
+                      placeholder="© 2025 Nom de l'auteur. Tous droits réservés..."
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label className="label">Mentions Légales</label>
+                    <textarea
+                      className="w-full input-field"
+                      rows="10"
+                      value={editedLegalMentions}
+                      onChange={(e) => setEditedLegalMentions(e.target.value)}
+                      placeholder="Droits de reproduction, conditions d'utilisation..."
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-4 mt-6">
+                  <button
+                    onClick={() => setEditingLegal(false)}
+                    className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleSaveLegal}
+                    className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold"
+                  >
+                    💾 Enregistrer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Contenu des chapitres */}
         {ebook.chapters && ebook.chapters.length > 0 ? (
           <div className="space-y-6">
