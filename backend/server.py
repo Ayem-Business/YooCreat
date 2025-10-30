@@ -44,6 +44,9 @@ users_collection = db.users
 ebooks_collection = db.ebooks
 user_sessions_collection = db.user_sessions
 
+# GridFS for image storage
+fs = gridfs.GridFS(db)
+
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
