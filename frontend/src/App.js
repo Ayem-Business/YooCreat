@@ -999,9 +999,9 @@ const EbookViewer = () => {
     } catch (error) {
       console.error('Error exporting:', error);
       if (error.response?.status === 401) {
-        alert('Session expirée. Veuillez vous reconnecter.');
+        showToast('Session expirée. Veuillez vous reconnecter.', 'error');
       } else {
-        alert(`Erreur lors de l'export: ${error.response?.data?.detail || error.message}`);
+        showToast(`Erreur lors de l'export: ${error.response?.data?.detail || error.message}`, 'error');
       }
     } finally {
       setExporting(false);
