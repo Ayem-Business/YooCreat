@@ -59,6 +59,18 @@ But frontend sent:
 
 ```yaml
 backend:
+  - task: "Legal Mentions Save Button Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "urgent"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ URGENT FIX VERIFIED - Legal mentions save button working perfectly. Created UpdateLegalPagesRequest Pydantic model, updated /api/ebooks/update-legal-pages endpoint to accept JSON body. No [object Object] errors, proper data persistence in MongoDB, correct response format returned. Fix completely resolves user-reported issue."
+
   - task: "Visual Theme Generation"
     implemented: true
     working: true
