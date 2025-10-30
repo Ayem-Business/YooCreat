@@ -1777,7 +1777,7 @@ const EbookViewer = () => {
         {/* Affichage des illustrations générées */}
         {ebook.illustrations && ebook.illustrations.length > 0 && (
           <div className="card mb-6" data-testid="illustrations-display">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">🖼️ Illustrations Suggérées</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">🖼️ Illustrations Générées par IA</h2>
             
             <div className="space-y-6">
               {ebook.illustrations.map((chapterIllust, idx) => (
@@ -1787,36 +1787,45 @@ const EbookViewer = () => {
                   </h3>
                   
                   <div className="space-y-4">
-                    {chapterIllust.queries && chapterIllust.queries.map((query, qIdx) => (
-                      <div key={qIdx} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex flex-col md:flex-row gap-4">
+                    {chapterIllust.images && chapterIllust.images.map((img, imgIdx) => (
+                      <div key={imgIdx} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex flex-col gap-4">
                           {/* Image Preview */}
-                          {query.image_url && (
-                            <div className="md:w-1/3">
+                          {img.image_base64 ? (
+                            <div className="w-full">
                               <img 
-                                src={query.image_url} 
-                                alt={query.alt_text}
-                                className="w-full h-40 object-cover rounded-lg shadow-md"
-                                onError={(e) => {
-                                  e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
-                                }}
+                                src={`data:image/png;base64,${img.image_base64}`}
+                                alt={img.alt_text}
+                                className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
                               />
+                            </div>
+                          ) : img.error ? (
+                            <div className="bg-red-50 border border-red-200 rounded p-4 text-center">
+                              <p className="text-red-600">❌ Erreur de génération: {img.error}</p>
+                            </div>
+                          ) : (
+                            <div className="bg-gray-200 rounded p-4 text-center">
+                              <p className="text-gray-500">Image en cours de génération...</p>
                             </div>
                           )}
                           
                           {/* Details */}
-                          <div className="md:w-2/3">
-                            <p className="text-sm text-gray-500 mb-1">
-                              <strong>Recherche :</strong> {query.search_query}
-                            </p>
+                          <div>
                             <p className="text-sm text-gray-600 mb-2">
-                              <strong>Description Alt :</strong> {query.alt_text}
+                              <strong>Description :</strong> {img.alt_text}
                             </p>
-                            <p className="text-xs text-gray-500 italic">
-                              <strong>Placement :</strong> {query.placement}
+                            {img.dalle_prompt && (
+                              <p className="text-xs text-gray-500 italic mb-2">
+                                <strong>Prompt DALL-E :</strong> {img.dalle_prompt}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500">
+                              <strong>Placement suggéré :</strong> {img.placement}
                             </p>
-                            {query.image_credit && (
-                              <p className="text-xs text-gray-400 mt-2">{query.image_credit}</p>
+                            {img.image_source && (
+                              <p className="text-xs text-gray-400 mt-2">
+                                Source : {img.image_source === 'dall-e' ? 'Généré par DALL-E' : 'Upload utilisateur'}
+                              </p>
                             )}
                           </div>
                         </div>
