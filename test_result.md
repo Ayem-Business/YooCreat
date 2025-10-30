@@ -29,6 +29,30 @@ But frontend sent:
 
 **Status:** ✅ Fixed - Ready for testing
 
+**TESTING RESULTS (2025-01-27 23:50):**
+✅ **URGENT FIX VERIFIED** - Legal mentions save button working correctly!
+- ✅ No [object Object] errors detected
+- ✅ JSON body properly parsed by backend Pydantic model
+- ✅ Data properly saved to MongoDB
+- ✅ Expected response format returned: `{"success": true, "message": "Legal pages updated successfully"}`
+- ✅ All test scenarios passed
+
+**Test Details:**
+- Created test ebook with legal pages
+- Sent POST to `/api/ebooks/update-legal-pages` with JSON body:
+  ```json
+  {
+    "ebook_id": "<ebook_id>",
+    "copyright_page": "© 2025 Test Author\nDroits réservés.",
+    "legal_mentions": "Protection de la propriété intellectuelle : Ce livre est protégé."
+  }
+  ```
+- Verified 200 OK response with success: true
+- Confirmed data persistence in database
+- No [object Object] errors in response
+
+**Status:** ✅ **COMPLETELY FIXED AND VERIFIED**
+
 ---
 
 ## YAML TEST STRUCTURE
