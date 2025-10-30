@@ -67,3 +67,12 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
