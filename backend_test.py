@@ -590,6 +590,7 @@ class YooCreatAPITester:
             ("Enhanced TOC Generation", self.test_enhanced_toc_generation),
             ("Content Generation Format", self.test_content_generation_format),
             ("Legal Pages Generation", self.test_legal_pages_generation),
+            ("URGENT: Legal Mentions Update Fix", self.test_legal_mentions_update_fix),
             ("Visual Theme Generation", self.test_visual_theme_generation),
             ("Illustrations Generation", self.test_illustrations_generation),
             ("Ebook Data Storage", self.test_ebook_data_storage),
