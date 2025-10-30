@@ -82,6 +82,10 @@ class EbookCreate(BaseModel):
     description: str
     chapters_count: int = Field(ge=1, le=50)
     length: str
+    genre: Optional[str] = None
+    about_author: Optional[str] = None
+    acknowledgments: Optional[str] = None
+    preface: Optional[str] = None
 
 class GenerateTOC(BaseModel):
     author: str
