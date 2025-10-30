@@ -830,6 +830,17 @@ const EbookCreator = () => {
           </div>
         )}
 
+        {/* Progress Bar for TOC Generation */}
+        {loading && tocProgress > 0 && (
+          <div className="mt-6">
+            <ProgressBar 
+              progress={tocProgress}
+              message={progressMessage}
+              details={progressDetails}
+            />
+          </div>
+        )}
+
         {/* Step 2: TOC Preview */}
         {step === 2 && (
           <div className="card">
