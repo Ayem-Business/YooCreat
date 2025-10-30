@@ -1165,24 +1165,22 @@ Réponds UNIQUEMENT avec le JSON."""
 
 @app.post("/api/ebooks/update-legal-pages")
 async def update_legal_pages(
-    ebook_id: str,
-    copyright_page: str,
-    legal_mentions: str,
+    request: UpdateLegalPagesRequest,
     current_user = Depends(get_current_user)
 ):
     """Update legal pages manually"""
     try:
-        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        ebook = ebooks_collection.find_one({"_id": request.ebook_id, "user_id": current_user["_id"]})
         if not ebook:
             raise HTTPException(status_code=404, detail="Ebook not found")
         
         # Update legal pages
         legal_pages = ebook.get('legal_pages', {})
-        legal_pages['copyright_page'] = copyright_page
-        legal_pages['legal_mentions'] = legal_mentions
+        legal_pages['copyright_page'] = request.copyright_page
+        legal_pages['legal_mentions'] = request.legal_mentions
         
         ebooks_collection.update_one(
-            {"_id": ebook_id},
+            {"_id": request.ebook_id},
             {"$set": {"legal_pages": legal_pages}}
         )
         
