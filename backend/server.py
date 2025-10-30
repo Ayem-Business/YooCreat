@@ -734,6 +734,144 @@ Réponds UNIQUEMENT avec le JSON."""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating cover: {str(e)}")
 
+@app.post("/api/ebooks/generate-cover-image")
+async def generate_cover_image(request: GenerateCoverRequest, current_user = Depends(get_current_user)):
+    """Generate an actual cover image using DALL-E"""
+    try:
+        ebook_id = request.ebook_id
+        # Get ebook
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Create DALL-E prompt for cover image
+        dalle_prompt = f"""Professional book cover design for:
+Title: "{ebook['title']}"
+Author: {ebook['author']}
+Genre: {ebook.get('genre', 'Non-fiction')}
+Tone: {ebook['tone']}
+
+Design a beautiful, professional book cover with:
+- The book title prominently displayed
+- Author name
+- Modern, eye-catching design
+- Color scheme that matches the {ebook['tone']} tone
+- High-quality, publishable appearance
+- Minimalist and elegant style
+
+No photographs of people. Use abstract designs, patterns, or symbolic imagery.
+The design should be professional enough for Amazon KDP or traditional publishing."""
+
+        print(f"Generating cover image with DALL-E for: {ebook['title']}")
+        
+        # Initialize DALL-E
+        image_gen = OpenAIImageGeneration(api_key=EMERGENT_LLM_KEY)
+        
+        # Generate cover image
+        images = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: image_gen.generate_images(
+                prompt=dalle_prompt,
+                model="gpt-image-1",
+                number_of_images=1
+            )
+        )
+        
+        if images and len(images) > 0:
+            # Convert to base64
+            image_base64 = base64.b64encode(images[0]).decode('utf-8')
+            
+            # Store in GridFS
+            image_id = fs.put(
+                images[0],
+                filename=f"cover_{ebook_id}_{datetime.now(timezone.utc).timestamp()}.png",
+                content_type="image/png",
+                metadata={
+                    "ebook_id": ebook_id,
+                    "type": "cover",
+                    "generated_at": datetime.now(timezone.utc).isoformat()
+                }
+            )
+            
+            # Update ebook cover with image
+            cover_data = ebook.get('cover', {})
+            cover_data['cover_image_base64'] = image_base64
+            cover_data['cover_image_id'] = str(image_id)
+            
+            ebooks_collection.update_one(
+                {"_id": ebook_id},
+                {"$set": {"cover": cover_data}}
+            )
+            
+            return {
+                "success": True,
+                "cover_image_base64": image_base64
+            }
+        else:
+            raise HTTPException(status_code=500, detail="No image was generated")
+        
+    except Exception as e:
+        print(f"Error generating cover image: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating cover image: {str(e)}")
+
+@app.post("/api/ebooks/upload-cover-image")
+async def upload_cover_image(
+    ebook_id: str,
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user)
+):
+    """Upload a custom cover image"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Invalid file type. Only JPG, PNG, WebP allowed")
+        
+        # Read file
+        image_data = await file.read()
+        
+        # Store in GridFS
+        image_id = fs.put(
+            image_data,
+            filename=file.filename,
+            content_type=file.content_type,
+            metadata={
+                "ebook_id": ebook_id,
+                "type": "cover",
+                "uploaded_by": current_user["_id"],
+                "uploaded_at": datetime.now(timezone.utc).isoformat(),
+                "source": "user_upload"
+            }
+        )
+        
+        # Convert to base64
+        image_base64 = base64.b64encode(image_data).decode('utf-8')
+        
+        # Update ebook cover
+        cover_data = ebook.get('cover', {})
+        cover_data['cover_image_base64'] = image_base64
+        cover_data['cover_image_id'] = str(image_id)
+        cover_data['source'] = 'user_upload'
+        
+        ebooks_collection.update_one(
+            {"_id": ebook_id},
+            {"$set": {"cover": cover_data}}
+        )
+        
+        return {
+            "success": True,
+            "cover_image_base64": image_base64
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error uploading cover image: {str(e)}")
+
 @app.post("/api/ebooks/create")
 async def create_ebook(ebook_data: EbookCreate, current_user = Depends(get_current_user)):
     ebook_id = f"ebook_{datetime.utcnow().timestamp()}".replace(".", "_")
