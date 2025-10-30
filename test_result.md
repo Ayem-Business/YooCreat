@@ -150,6 +150,8 @@ test_plan:
 
 agent_communication:
   - agent: "testing"
+    message: "✅ URGENT FIX VERIFIED - Legal mentions save button completely fixed and working. No [object Object] errors, JSON body properly parsed, data persisted correctly. All backend APIs tested and functional."
+  - agent: "testing"
     message: "✅ BACKEND TESTING COMPLETE - All new visual themes and illustrations features working perfectly. Visual theme generation produces valid HEX colors, proper fonts, and French descriptions. Illustrations generation creates contextually relevant image queries with English search terms, French alt text, and valid Unsplash URLs. Data storage confirmed in MongoDB. Ready for frontend integration and export functionality implementation."
 ```
 
