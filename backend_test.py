@@ -463,6 +463,95 @@ class YooCreatAPITester:
             self.log(f"❌ Ebook data storage test error: {str(e)}", "ERROR")
             return False
     
+    async def test_legal_mentions_update_fix(self):
+        """Test URGENT FIX: Legal mentions save button with JSON body parsing"""
+        self.log("Testing URGENT FIX: Legal mentions update with JSON body...")
+        
+        try:
+            headers = {"Authorization": f"Bearer {self.auth_token}"}
+            
+            # First, generate legal pages to have something to update
+            legal_gen_data = {
+                "ebook_id": self.test_ebook_id,
+                "year": 2025,
+                "edition": "Première édition"
+            }
+            
+            gen_response = await self.client.post(f"{BACKEND_URL}/ebooks/generate-legal-pages", json=legal_gen_data, headers=headers)
+            
+            if gen_response.status_code != 200:
+                self.log(f"❌ Failed to generate legal pages first: {gen_response.status_code} - {gen_response.text}", "ERROR")
+                return False
+            
+            # Now test the update functionality with JSON body (the fix)
+            update_data = {
+                "ebook_id": self.test_ebook_id,
+                "copyright_page": "© 2025 Test Author\nDroits réservés.",
+                "legal_mentions": "Protection de la propriété intellectuelle : Ce livre est protégé."
+            }
+            
+            self.log("Testing POST /api/ebooks/update-legal-pages with JSON body...")
+            update_response = await self.client.post(f"{BACKEND_URL}/ebooks/update-legal-pages", json=update_data, headers=headers)
+            
+            if update_response.status_code == 200:
+                response_data = update_response.json()
+                
+                # Check for expected response format
+                if response_data.get("success") != True:
+                    self.log(f"❌ Update response missing success=true: {response_data}", "ERROR")
+                    return False
+                
+                if "message" not in response_data:
+                    self.log(f"❌ Update response missing message field: {response_data}", "ERROR")
+                    return False
+                
+                expected_message = "Legal pages updated successfully"
+                if expected_message not in response_data.get("message", ""):
+                    self.log(f"❌ Unexpected message: {response_data.get('message')}", "ERROR")
+                    return False
+                
+                self.log("✅ Legal pages update API returned correct success response")
+                
+                # Verify data persistence - get the ebook and check if changes were saved
+                get_response = await self.client.get(f"{BACKEND_URL}/ebooks/{self.test_ebook_id}", headers=headers)
+                
+                if get_response.status_code == 200:
+                    ebook_data = get_response.json()
+                    legal_pages = ebook_data.get("legal_pages", {})
+                    
+                    # Check if our updates were saved
+                    saved_copyright = legal_pages.get("copyright_page", "")
+                    saved_legal_mentions = legal_pages.get("legal_mentions", "")
+                    
+                    if update_data["copyright_page"] not in saved_copyright:
+                        self.log(f"❌ Copyright page not properly saved. Expected: '{update_data['copyright_page']}', Got: '{saved_copyright}'", "ERROR")
+                        return False
+                    
+                    if update_data["legal_mentions"] not in saved_legal_mentions:
+                        self.log(f"❌ Legal mentions not properly saved. Expected: '{update_data['legal_mentions']}', Got: '{saved_legal_mentions}'", "ERROR")
+                        return False
+                    
+                    self.log("✅ Legal pages data properly persisted in MongoDB")
+                    self.log("✅ URGENT FIX VERIFIED: No [object Object] errors, JSON body properly parsed")
+                    return True
+                else:
+                    self.log(f"❌ Failed to retrieve ebook for verification: {get_response.status_code}", "ERROR")
+                    return False
+                    
+            else:
+                self.log(f"❌ Legal pages update failed: {update_response.status_code} - {update_response.text}", "ERROR")
+                
+                # Check if this is the old [object Object] error
+                response_text = update_response.text
+                if "[object Object]" in response_text:
+                    self.log("❌ CRITICAL: [object Object] error still present - fix not working!", "ERROR")
+                
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Legal mentions update test error: {str(e)}", "ERROR")
+            return False
+    
     async def test_health_check(self):
         """Test API health check"""
         self.log("Testing API health check...")
