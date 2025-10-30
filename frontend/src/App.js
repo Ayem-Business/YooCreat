@@ -903,6 +903,7 @@ const EbookCreator = () => {
 const EbookViewer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [ebook, setEbook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showExportMenu, setShowExportMenu] = useState(false);
