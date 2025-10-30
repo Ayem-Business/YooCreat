@@ -140,12 +140,13 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Legal Mentions Save Button Fix"
     - "Visual Theme Generation"
     - "Illustrations Generation"
     - "Data Storage Verification"
   stuck_tasks: []
   test_all: false
-  test_priority: "high_first"
+  test_priority: "urgent_first"
 
 agent_communication:
   - agent: "testing"
