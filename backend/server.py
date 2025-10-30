@@ -106,6 +106,20 @@ class GenerateVisualThemeRequest(BaseModel):
 class GenerateIllustrationsRequest(BaseModel):
     ebook_id: str
 
+class EditChapterRequest(BaseModel):
+    ebook_id: str
+    chapter_number: int
+    new_content: str
+
+class RegenerateChapterRequest(BaseModel):
+    ebook_id: str
+    chapter_number: int
+
+class RegenerateImageRequest(BaseModel):
+    ebook_id: str
+    chapter_number: int
+    illustration_index: int
+
 # Helper Functions
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
