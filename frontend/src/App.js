@@ -1229,11 +1229,11 @@ const EbookViewer = () => {
           return ill;
         });
         setEbook({ ...ebook, illustrations: updatedIllustrations });
-        alert('Image régénérée avec succès !');
+        showToast('Image régénérée avec succès !', 'success');
       }
     } catch (error) {
       console.error('Error regenerating image:', error);
-      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
     } finally {
       setRegeneratingImage(null);
     }
