@@ -1028,9 +1028,9 @@ const EbookViewer = () => {
     } catch (error) {
       console.error('Error generating cover:', error);
       if (error.response?.status === 401) {
-        alert('Session expirée. Veuillez vous reconnecter.');
+        showToast('Session expirée. Veuillez vous reconnecter.', 'error');
       } else {
-        alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+        showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
       }
     } finally {
       setGeneratingCover(false);
