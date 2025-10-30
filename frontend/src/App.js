@@ -544,129 +544,238 @@ const EbookCreator = () => {
         {step === 1 && (
           <div className="card">
             <h2 className="text-3xl font-bold text-gray-800 mb-6">Créer un nouvel Ebook</h2>
-            <form onSubmit={handleGenerateTOC} className="space-y-6">
-              <div>
-                <label className="label">Nom de l'auteur</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  value={formData.author}
-                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                  required
-                  data-testid="author-input"
-                />
-              </div>
-
-              <div>
-                <label className="label">Titre du livre</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                  data-testid="title-input"
-                />
-              </div>
-
-              <div>
-                <label className="label">Ton</label>
-                <select
-                  className="select-field"
-                  value={formData.tone}
-                  onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
-                  data-testid="tone-select"
-                >
-                  {tones.map(tone => (
-                    <option key={tone} value={tone}>{tone}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="label">Public cible (sélection multiple)</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {audiences.map(audience => (
-                    <button
-                      key={audience}
-                      type="button"
-                      onClick={() => handleAudienceToggle(audience)}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                        formData.target_audience.includes(audience)
-                          ? 'bg-primary-violet text-white'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                      data-testid={`audience-${audience.toLowerCase()}`}
-                    >
-                      {audience}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="label">Description du livre</label>
-                <textarea
-                  className="input-field"
-                  rows="5"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Décrivez le contenu souhaité, les thèmes principaux, et les objectifs du livre..."
-                  required
-                  data-testid="description-input"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="label">Nombre de chapitres: {formData.chapters_count}</label>
-                <input
-                  type="range"
-                  min="1"
-                  max="50"
-                  className="w-full"
-                  value={formData.chapters_count}
-                  onChange={(e) => setFormData({ ...formData, chapters_count: parseInt(e.target.value) })}
-                  data-testid="chapters-count-slider"
-                />
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>1</span>
-                  <span>25</span>
-                  <span>50</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="label">Longueur approximative</label>
-                <select
-                  className="select-field"
-                  value={formData.length}
-                  onChange={(e) => setFormData({ ...formData, length: e.target.value })}
-                  data-testid="length-select"
-                >
-                  {lengths.map(length => (
-                    <option key={length} value={length}>{length}</option>
-                  ))}
-                </select>
-              </div>
-
+            
+            {/* Sub-steps indicator */}
+            <div className="flex items-center justify-center mb-6 space-x-4">
               <button
-                type="submit"
-                disabled={loading || formData.target_audience.length === 0}
-                className="btn-primary w-full flex items-center justify-center"
-                data-testid="generate-toc-button"
+                type="button"
+                onClick={() => setFormStep(1)}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  formStep === 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                }`}
               >
-                {loading ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
-                    Génération de la table des matières...
-                  </>
-                ) : (
-                  <>
-                    <FaCheckCircle className="mr-2" />
-                    Générer la table des matières
-                  </>
-                )}
+                Étape 1 : Informations principales
               </button>
+              <button
+                type="button"
+                onClick={() => setFormStep(2)}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  formStep === 2 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+                }`}
+              >
+                Étape 2 : Remerciements & Préface
+              </button>
+            </div>
+
+            <form onSubmit={handleGenerateTOC} className="space-y-6">
+              {/* Form Step 1: Main Information */}
+              {formStep === 1 && (
+                <>
+                  <div>
+                    <label className="label">Nom de l'auteur</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={formData.author}
+                      onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                      required
+                      data-testid="author-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Titre du livre</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required
+                      data-testid="title-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Genre du livre</label>
+                    <select
+                      className="select-field"
+                      value={formData.genre}
+                      onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                      data-testid="genre-select"
+                    >
+                      {genres.map(genre => (
+                        <option key={genre} value={genre}>{genre}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="label">Ton</label>
+                    <select
+                      className="select-field"
+                      value={formData.tone}
+                      onChange={(e) => setFormData({ ...formData, tone: e.target.value })}
+                      data-testid="tone-select"
+                    >
+                      {tones.map(tone => (
+                        <option key={tone} value={tone}>{tone}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="label">Public cible (sélection multiple)</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {audiences.map(audience => (
+                        <button
+                          key={audience}
+                          type="button"
+                          onClick={() => handleAudienceToggle(audience)}
+                          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                            formData.target_audience.includes(audience)
+                              ? 'bg-primary-violet text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                          data-testid={`audience-${audience.toLowerCase()}`}
+                        >
+                          {audience}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label">Description du livre</label>
+                    <textarea
+                      className="input-field"
+                      rows="5"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Décrivez le contenu souhaité, les thèmes principaux, et les objectifs du livre..."
+                      required
+                      data-testid="description-input"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label className="label">À propos de l'auteur (optionnel)</label>
+                    <textarea
+                      className="input-field"
+                      rows="3"
+                      value={formData.about_author}
+                      onChange={(e) => setFormData({ ...formData, about_author: e.target.value })}
+                      placeholder="Biographie courte de l'auteur, expérience, qualifications..."
+                      data-testid="about-author-input"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label className="label">Nombre de chapitres: {formData.chapters_count}</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="50"
+                      className="w-full"
+                      value={formData.chapters_count}
+                      onChange={(e) => setFormData({ ...formData, chapters_count: parseInt(e.target.value) })}
+                      data-testid="chapters-count-slider"
+                    />
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>1</span>
+                      <span>25</span>
+                      <span>50</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label">Longueur approximative</label>
+                    <select
+                      className="select-field"
+                      value={formData.length}
+                      onChange={(e) => setFormData({ ...formData, length: e.target.value })}
+                      data-testid="length-select"
+                    >
+                      {lengths.map(length => (
+                        <option key={length} value={length}>{length}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setFormStep(2)}
+                      className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600"
+                    >
+                      Suivant : Remerciements & Préface →
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Form Step 2: Acknowledgments & Preface */}
+              {formStep === 2 && (
+                <>
+                  <div>
+                    <label className="label">Remerciements (optionnel)</label>
+                    <textarea
+                      className="input-field"
+                      rows="5"
+                      value={formData.acknowledgments}
+                      onChange={(e) => setFormData({ ...formData, acknowledgments: e.target.value })}
+                      placeholder="Dédicaces, remerciements aux personnes qui ont contribué..."
+                      data-testid="acknowledgments-input"
+                    ></textarea>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Ex: Je remercie ma famille pour leur soutien...
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="label">Préface / Avant-propos (optionnel)</label>
+                    <textarea
+                      className="input-field"
+                      rows="7"
+                      value={formData.preface}
+                      onChange={(e) => setFormData({ ...formData, preface: e.target.value })}
+                      placeholder="Introduction au livre, contexte, motivations de l'auteur..."
+                      data-testid="preface-input"
+                    ></textarea>
+                    <p className="text-sm text-gray-500 mt-1">
+                      La préface présente le livre avant la table des matières
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setFormStep(1)}
+                      className="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-400"
+                    >
+                      ← Retour
+                    </button>
+                    
+                    <button
+                      type="submit"
+                      disabled={loading || formData.target_audience.length === 0}
+                      className="btn-primary flex items-center justify-center px-6 py-3"
+                      data-testid="generate-toc-button"
+                    >
+                      {loading ? (
+                        <>
+                          <FaSpinner className="animate-spin mr-2" />
+                          Génération de la table des matières...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheckCircle className="mr-2" />
+                          Générer la table des matières
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
           </div>
         )}
