@@ -1158,6 +1158,37 @@ Réponds UNIQUEMENT avec le JSON."""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating legal pages: {str(e)}")
 
+@app.post("/api/ebooks/update-legal-pages")
+async def update_legal_pages(
+    ebook_id: str,
+    copyright_page: str,
+    legal_mentions: str,
+    current_user = Depends(get_current_user)
+):
+    """Update legal pages manually"""
+    try:
+        ebook = ebooks_collection.find_one({"_id": ebook_id, "user_id": current_user["_id"]})
+        if not ebook:
+            raise HTTPException(status_code=404, detail="Ebook not found")
+        
+        # Update legal pages
+        legal_pages = ebook.get('legal_pages', {})
+        legal_pages['copyright_page'] = copyright_page
+        legal_pages['legal_mentions'] = legal_mentions
+        
+        ebooks_collection.update_one(
+            {"_id": ebook_id},
+            {"$set": {"legal_pages": legal_pages}}
+        )
+        
+        return {
+            "success": True,
+            "message": "Legal pages updated successfully"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating legal pages: {str(e)}")
+
 @app.post("/api/ebooks/generate-visual-theme")
 async def generate_visual_theme(request: GenerateVisualThemeRequest, current_user = Depends(get_current_user)):
     """Generate visual theme (colors, fonts, styles) for the ebook using AI"""
