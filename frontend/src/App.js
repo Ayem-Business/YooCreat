@@ -1188,11 +1188,11 @@ const EbookViewer = () => {
           ch.number === chapterNumber ? { ...ch, content: response.data.new_content } : ch
         );
         setEbook({ ...ebook, chapters: updatedChapters });
-        alert('Chapitre régénéré avec succès !');
+        showToast('Chapitre régénéré avec succès !', 'success');
       }
     } catch (error) {
       console.error('Error regenerating chapter:', error);
-      alert(`Erreur: ${error.response?.data?.detail || error.message}`);
+      showToast(`Erreur: ${error.response?.data?.detail || error.message}`, 'error');
     } finally {
       setRegeneratingChapter(null);
     }
